@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -15,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
+import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { EmptyState } from './page-primitives';
 
 export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
@@ -34,7 +34,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
           <span className="page-kicker">Ringkasan hari ini</span>
           <h1>Selamat datang, Bu Rani!</h1>
           <p><strong>{snapshot.className}</strong> sedang bertumbuh. Ada {snapshot.supportCount} siswa yang mungkin membutuhkan penguatan belajar.</p>
-          <Link className="welcome-action" href="/dashboard/progres-belajar">Lihat progres kelas <ArrowRight size={18} /></Link>
+          <BrowserNavigationLink className="welcome-action" href="/dashboard/progres-belajar">Lihat progres kelas <ArrowRight size={18} /></BrowserNavigationLink>
         </div>
         <Image className="welcome-mascot" src="/assets/moniy-mascot-face.png" alt="Maskot MONIY" width={220} height={220} priority />
       </section>
@@ -48,7 +48,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
 
       <section className="overview-grid">
         <article className="surface-card topic-overview-card">
-          <div className="section-heading-row"><div><h2>Progres per topik</h2><p>Lihat tingkat penyelesaian dan penguasaan kelas.</p></div><Link className="text-action" href="/dashboard/progres-belajar">Buka detail <ChevronRight size={17} /></Link></div>
+          <div className="section-heading-row"><div><h2>Progres per topik</h2><p>Lihat tingkat penyelesaian dan penguasaan kelas.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/progres-belajar">Buka detail <ChevronRight size={17} /></BrowserNavigationLink></div>
           {snapshot.topics.length ? <div className="topic-progress-list">{snapshot.topics.map((topic) => <div className="topic-progress-row" key={topic.id}><div className="topic-progress-meta"><div><strong>{topic.name}</strong><span>{topic.completed} siswa selesai</span></div><b>{topic.correctRate}% benar</b></div><div className="thin-progress" aria-label={`${topic.correctRate}% keputusan benar`}><span style={{ width: `${topic.correctRate}%` }} /></div></div>)}</div> : <EmptyState title="Belum ada progres" description="Data topik akan muncul setelah siswa memulai modul." />}
         </article>
 
@@ -56,7 +56,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
           <div className="insight-topline"><span className="insight-icon"><BrainCircuit size={23} /></span><span className="ai-label"><Sparkles size={14} /> Dibantu AI</span></div>
           <h2>Pola pemahaman kelas</h2><p>{snapshot.insight}</p>
           {weakTopic ? <div className="insight-focus"><Lightbulb size={18} /><span><strong>Fokus berikutnya:</strong> {weakTopic.commonMistake}.</span></div> : null}
-          <Link className="secondary-button" href="/dashboard/progres-belajar">Lihat saran tindak lanjut</Link>
+          <BrowserNavigationLink className="secondary-button" href="/dashboard/progres-belajar">Lihat saran tindak lanjut</BrowserNavigationLink>
           <small>Rekomendasi ini membantu guru. Keputusan pembelajaran tetap ditentukan oleh guru.</small>
         </article>
       </section>
@@ -65,12 +65,12 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
         <article className="surface-card compact-card">
           <div className="section-heading-row"><div><h2>Sinyal perlindungan kelas</h2><p>Agregat anonim untuk pembinaan kolektif.</p></div><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span></div>
           <div className="risk-mini-row"><span className="solid-icon orange"><ShieldCheck size={22} /></span><div><strong>{snapshot.riskEventCount} kejadian terdeteksi</strong><span>{snapshot.riskDelta > 0 ? 'Meningkat' : 'Menurun'} {Math.abs(snapshot.riskDelta)}% dari periode lalu</span></div></div>
-          <Link className="text-action" href="/dashboard/peringatan-judi">Buka peringatan kelas <ArrowRight size={17} /></Link>
+          <BrowserNavigationLink className="text-action" href="/dashboard/peringatan-judi">Buka peringatan kelas <ArrowRight size={17} /></BrowserNavigationLink>
         </article>
 
         <article className="surface-card compact-card">
-          <div className="section-heading-row"><div><h2>Perlu ditinjau</h2><p>Hasil Simulasi Bisnis terbaru.</p></div><Link className="text-action" href="/dashboard/komunitas-kelas">Lihat semua</Link></div>
-          {pendingPosts.length ? pendingPosts.map((post) => <Link className="community-mini-row" href="/dashboard/komunitas-kelas" key={post.id}><span className="student-avatar">{post.initials}</span><span><strong>{post.title}</strong><small>{post.studentName}, {post.submittedAt}</small></span><ChevronRight size={17} /></Link>) : <EmptyState title="Semua sudah ditinjau" description="Tidak ada postingan yang menunggu." />}
+          <div className="section-heading-row"><div><h2>Perlu ditinjau</h2><p>Hasil Simulasi Bisnis terbaru.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/komunitas-kelas">Lihat semua</BrowserNavigationLink></div>
+          {pendingPosts.length ? pendingPosts.map((post) => <BrowserNavigationLink className="community-mini-row" href="/dashboard/komunitas-kelas" key={post.id}><span className="student-avatar">{post.initials}</span><span><strong>{post.title}</strong><small>{post.studentName}, {post.submittedAt}</small></span><ChevronRight size={17} /></BrowserNavigationLink>) : <EmptyState title="Semua sudah ditinjau" description="Tidak ada postingan yang menunggu." />}
         </article>
       </section>
     </div>

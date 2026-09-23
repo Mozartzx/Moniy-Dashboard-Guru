@@ -1,8 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   Bell,
   BookOpenCheck,
@@ -25,6 +24,7 @@ import {
 import { classOptions, periodOptions } from '@/lib/moniy/mock-data';
 import { dashboardRoutes, getDashboardRoute } from '@/lib/moniy/navigation';
 import type { DataMode } from '@/lib/moniy/types';
+import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { useDashboardContext } from './dashboard-context';
 import { FilterSelect } from './filter-select';
 
@@ -40,7 +40,6 @@ function LoadingState() {
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const currentRoute = getDashboardRoute(pathname);
   const { dashboard, className, toast, notify } = useDashboardContext();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -61,9 +60,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             const active = pathname === item.href;
             const badge = item.showsCommunityBadge && dashboard.pendingCommunityCount > 0 ? dashboard.pendingCommunityCount : null;
             return (
-              <Link key={item.href} href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}>
+              <BrowserNavigationLink key={item.href} href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}>
                 <Icon size={20} /><span>{item.label}</span>{badge ? <b>{badge}</b> : null}
-              </Link>
+              </BrowserNavigationLink>
             );
           })}
         </nav>
@@ -93,7 +92,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <div className="profile-menu">
                   <div className="profile-menu-head"><CircleUserRound size={20} /><span><strong>Rani Suryani</strong><small>guru@moniy.id</small></span></div>
                   <label>Mode data contoh<select value={dashboard.mode} onChange={(event) => dashboard.setMode(event.target.value as DataMode)}><option value="normal">Normal</option><option value="loading">Memuat</option><option value="empty">Kosong</option><option value="error">Error</option></select></label>
-                  <button type="button" onClick={() => router.push('/')}>Keluar dari demo</button>
+                  <button type="button" onClick={() => window.location.assign('/')}>Keluar dari demo</button>
                 </div>
               ) : null}
             </div>
