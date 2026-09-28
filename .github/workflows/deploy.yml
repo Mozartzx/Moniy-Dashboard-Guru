@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      # ponytail: vinext 1.0.0-beta.5 standalone output omits its React peer deps; drop this once vinext copies them itself
+      - run: cp -r node_modules/{react,react-dom,react-server-dom-webpack,scheduler} dist/standalone/node_modules/
 
       - name: Upload to VPS
         run: |
