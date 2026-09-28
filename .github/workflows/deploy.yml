@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+      - name: Upload to VPS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519
+          # ponytail: rsync over the live dir, a few seconds of mixed files mid-upload; switch to release dirs + symlink if that ever bites
+          rsync -az --delete dist/standalone/ moniy@72.61.149.56:/var/www/moniy-dashboard/
+          ssh moniy@72.61.149.56 sudo systemctl restart moniy-dashboard
+
+      - name: Smoke test
+        run: |
+          for i in 1 2 3 4 5 6; do
+            curl -fsS -o /dev/null https://moniy.site/ && exit 0
+            sleep 5
+          done
+          exit 1
