@@ -4,6 +4,6 @@ import { useDashboardContext } from '@/components/moniy/dashboard/dashboard-cont
 import { OverviewPage } from '@/components/moniy/pages/overview-page';
 
 export default function OverviewRoute() {
-  const { dashboard } = useDashboardContext();
-  return dashboard.snapshot ? <OverviewPage snapshot={dashboard.snapshot} /> : null;
+  const { dashboard, teacher } = useDashboardContext();
+  return dashboard.snapshot ? <OverviewPage snapshot={dashboard.snapshot} teacherName={teacher?.name} /> : null;
 }

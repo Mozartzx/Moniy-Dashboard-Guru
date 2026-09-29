@@ -8,25 +8,21 @@ import {
   ChevronDown,
   CircleUserRound,
   GraduationCap,
+  LogOut,
   Menu,
   RefreshCw,
   School,
   Settings2,
+  UserRoundCog,
   X,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { classOptions, periodOptions } from '@/lib/moniy/mock-data';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { periodOptions } from '@/lib/moniy/period';
 import { dashboardRoutes, getDashboardRoute } from '@/lib/moniy/navigation';
-import type { DataMode } from '@/lib/moniy/types';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { useDashboardContext } from './dashboard-context';
 import { FilterSelect } from './filter-select';
+import { AccountSettingsDialog, ManageClassDialog, SignOutDialog } from './shell-dialogs';
 
 function LoadingState() {
   return (
@@ -41,10 +37,28 @@ function LoadingState() {
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const currentRoute = getDashboardRoute(pathname);
-  const { dashboard, className, toast, notify } = useDashboardContext();
+  const { dashboard, className, classOptions, activeClass, teacher, reloadSession, toast, notify } = useDashboardContext();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const close = (event: PointerEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent ? event.key === 'Escape' : !profileRef.current?.contains(event.target as Node)) setProfileOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [profileOpen]);
+
+  const teacherInitials = teacher?.name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase() ?? '..';
 
   return (
     <div className="dashboard-shell">
@@ -83,16 +97,16 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <FilterSelect label="Kelas" icon={School} value={dashboard.classId} options={classOptions} onValueChange={dashboard.setClassId} />
             <FilterSelect label="Periode" icon={BookOpenCheck} value={dashboard.period} options={periodOptions} onValueChange={dashboard.setPeriod} compact />
             <button className="manage-class-button" type="button" onClick={() => setManageOpen(true)}><Settings2 size={18} /> Kelola kelas</button>
-            <button className="icon-button notification-button" type="button" onClick={() => notify('Tidak ada notifikasi baru pada demo ini.', 2600)} aria-label="Notifikasi"><Bell size={20} /></button>
-            <div className="profile-wrap">
+            <button className="icon-button notification-button" type="button" onClick={() => notify('Tidak ada notifikasi baru.', 2600)} aria-label="Notifikasi"><Bell size={20} /></button>
+            <div className="profile-wrap" ref={profileRef}>
               <button className="profile-trigger" type="button" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen}>
-                <span className="teacher-avatar">RS</span><span><strong>Bu Rani</strong><small>Guru IPS</small></span><ChevronDown size={15} />
+                <span className="teacher-avatar">{teacherInitials}</span><span><strong>{teacher?.name ?? 'Memuat...'}</strong><small>Guru</small></span><ChevronDown size={15} />
               </button>
               {profileOpen ? (
                 <div className="profile-menu">
-                  <div className="profile-menu-head"><CircleUserRound size={20} /><span><strong>Rani Suryani</strong><small>guru@moniy.id</small></span></div>
-                  <label>Mode data contoh<select value={dashboard.mode} onChange={(event) => dashboard.setMode(event.target.value as DataMode)}><option value="normal">Normal</option><option value="loading">Memuat</option><option value="empty">Kosong</option><option value="error">Error</option></select></label>
-                  <button type="button" onClick={() => window.location.assign('/')}>Keluar dari demo</button>
+                  <div className="profile-menu-head"><CircleUserRound size={20} /><span><strong>{teacher?.name ?? '-'}</strong><small>{teacher?.email ?? '-'}</small></span></div>
+                  <button className="profile-menu-item" type="button" onClick={() => { setProfileOpen(false); setSettingsOpen(true); }}><UserRoundCog size={18} /> Pengaturan akun</button>
+                  <button className="danger-button" type="button" onClick={() => { setProfileOpen(false); setSignOutOpen(true); }}><LogOut size={17} /> Keluar</button>
                 </div>
               ) : null}
             </div>
@@ -100,24 +114,17 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="dashboard-main">
-          <div className="mock-banner"><span><span className="mock-dot" /> Data contoh frontend</span><p>Tidak ada data siswa nyata, backend, atau analisis AI produksi yang terhubung.</p></div>
           {dashboard.status === 'loading' ? <LoadingState /> : null}
           {dashboard.status === 'error' ? (
-            <div className="error-state"><span><RefreshCw size={28} /></span><h1>Data contoh gagal dimuat</h1><p>Ini adalah state error untuk kesiapan integrasi backend.</p><button className="primary-button" type="button" onClick={dashboard.reload}>Coba lagi</button></div>
+            <div className="error-state"><span><RefreshCw size={28} /></span><h1>Data gagal dimuat</h1><p>Terjadi kendala saat mengambil data kelas.</p><button className="primary-button" type="button" onClick={dashboard.reload}>Coba lagi</button></div>
           ) : null}
           {dashboard.status === 'success' ? children : null}
         </main>
       </section>
 
-      <Dialog open={manageOpen} onOpenChange={setManageOpen}>
-        <DialogContent className="detail-modal manage-class-modal" showCloseButton={false}>
-          <button className="modal-close" onClick={() => setManageOpen(false)} aria-label="Tutup"><X size={20} /></button>
-          <DialogTitle id="manage-title">Atur kelas contoh</DialogTitle>
-          <DialogDescription>Perubahan di sini hanya berlaku pada antarmuka demo.</DialogDescription>
-          <div className="class-code-panel"><span>Kode kelas</span><strong>MONIY-XA26</strong><button type="button" onClick={() => { void navigator.clipboard?.writeText('MONIY-XA26'); notify('Kode kelas contoh disalin.'); setManageOpen(false); }}>Salin kode</button></div>
-          <div className="manage-actions"><button className="secondary-button" onClick={() => window.alert('Penambahan siswa memerlukan backend dan belum tersedia pada demo frontend.')}>Tambah siswa</button><button className="secondary-button" onClick={() => window.alert('Pengaturan modul tersimpan hanya sebagai simulasi antarmuka.')}>Atur modul</button></div>
-        </DialogContent>
-      </Dialog>
+      <ManageClassDialog open={manageOpen} onOpenChange={setManageOpen} activeClass={activeClass} studentCount={dashboard.snapshot?.studentCount ?? 0} onSaved={reloadSession} notify={notify} />
+      <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} teacher={teacher} onSaved={reloadSession} notify={notify} />
+      <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />
       {toast ? <output className="toast-message">{toast}</output> : null}
     </div>
   );

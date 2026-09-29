@@ -75,7 +75,6 @@ export type DashboardQuery = {
   period: string;
 };
 
-export type DataMode = 'normal' | 'loading' | 'empty' | 'error';
 
 export interface TeacherDashboardRepository {
   getSnapshot(query: DashboardQuery): Promise<ClassroomSnapshot>;

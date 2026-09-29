@@ -18,11 +18,11 @@ export function StudentsPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
 
   return (
     <div className="page-stack">
-      <section className="page-intro"><div><span className="page-kicker">Rekam belajar</span><h1>Riwayat keputusan siswa</h1><p>Buka riwayat keputusan belajar individual. Data Perisai Judi tidak pernah tampil di halaman ini.</p></div><span className="privacy-badge"><LockKeyhole size={16} /> Terpisah dari data perlindungan</span></section>
+      <section className="page-intro"><div><span className="page-kicker">Rekam belajar</span><h1>Riwayat keputusan siswa</h1><p>Buka riwayat keputusan belajar individual. Data Perisai Judi tidak pernah tampil di halaman ini.</p></div></section>
       <section className="student-layout">
         <article className="surface-card student-list-card">
           <div className="student-toolbar"><label className="search-input"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama atau modul" aria-label="Cari siswa" /></label><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter status siswa"><option>Semua</option><option>Belum</option><option>Berjalan</option><option>Selesai</option></select></div>
-          {filtered.length ? <div className="student-list">{filtered.map((student) => <StudentRow student={student} selected={selected?.id === student.id} onSelect={() => setSelectedId(student.id)} key={student.id} />)}</div> : <EmptyState title="Siswa tidak ditemukan" description="Ubah kata kunci atau filter status." />}
+          {filtered.length ? <div className="student-list">{filtered.map((student) => <StudentRow student={student} selected={selected?.id === student.id} onSelect={() => setSelectedId(student.id)} key={student.id} />)}</div> : (snapshot.students.length ? <EmptyState title="Siswa tidak ditemukan" description="Ubah kata kunci atau filter status." /> : <EmptyState title="Belum ada siswa" description="Bagikan kode kelas lewat Kelola kelas agar siswa bisa bergabung." />)}
         </article>
         <aside className="surface-card student-detail-card">{selected ? <StudentDetail student={selected} /> : <EmptyState title="Pilih siswa" description="Riwayat keputusan akan muncul di sini." />}</aside>
       </section>
@@ -44,7 +44,7 @@ function StudentDetail({ student }: { student: Student }) {
     <div className="student-detail">
       <div className="student-detail-head"><span className="student-avatar large">{student.initials}</span><div><h2>{student.name}</h2><p>{student.activeModule}</p></div></div>
       <div className="student-detail-stats"><div><span>Progres</span><strong>{student.completedTopics}/{student.totalTopics} topik</strong></div><div><span>Nilai kuis</span><strong>{student.score ?? 'Belum ada'}</strong></div></div>
-      <div className="thin-progress student-progress" aria-label={`Progres ${progress}%`}><span style={{ width: `${progress}%` }} /></div>
+      <div className="thin-progress student-progress" aria-label={`Progres ${progress}%`}><span style={{ transform: `scaleX(${progress / 100})` }} /></div>
       <div className="detail-section-title"><h3>Keputusan terbaru</h3><span>Data belajar individual</span></div>
       {student.decisions.length ? <div className="decision-timeline">{student.decisions.map((decision) => <div className="decision-item" key={decision.id}><span className={decision.outcome === 'tepat' ? 'decision-dot good' : 'decision-dot reflect'}>{decision.outcome === 'tepat' ? <Check size={17} /> : <Lightbulb size={17} />}</span><div><strong>{decision.title}</strong><span>{decision.chapter} | {decision.time}</span><p>{decision.note}</p></div></div>)}</div> : <EmptyState title="Belum ada keputusan" description="Siswa belum memulai sesi storytelling." />}
       <div className="student-privacy-note"><span className="solid-icon green"><LockKeyhole size={16} /></span><p><strong>Batas privasi</strong>Halaman ini tidak memuat kejadian Perisai Anti Judi Online.</p></div>

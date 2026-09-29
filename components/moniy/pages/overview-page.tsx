@@ -17,11 +17,12 @@ import type { ClassroomSnapshot } from '@/lib/moniy/types';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { EmptyState } from './page-primitives';
 
-export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
+export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSnapshot; teacherName?: string }) {
   const pendingPosts = snapshot.communityPosts.filter((post) => !post.reviewed).slice(0, 2);
   const weakTopic = [...snapshot.topics].sort((a, b) => a.correctRate - b.correctRate)[0];
+  const firstName = teacherName?.split(' ')[0];
   const metrics = [
-    { label: 'Nilai rata-rata', value: snapshot.averageScore.toFixed(1), helper: '+3,2 dari bulan lalu', icon: GraduationCap, tone: 'blue' },
+    { label: 'Nilai rata-rata', value: snapshot.averageScore.toFixed(1), helper: 'Rata-rata nilai kuis & modul kelas', icon: GraduationCap, tone: 'blue' },
     { label: 'Modul selesai', value: `${snapshot.completionRate}%`, helper: `${Math.round(snapshot.studentCount * snapshot.completionRate / 100)} dari ${snapshot.studentCount} siswa`, icon: BookOpenCheck, tone: 'cyan' },
     { label: 'Perlu penguatan', value: String(snapshot.supportCount), helper: 'Berdasarkan progres belajar', icon: HandHeart, tone: 'orange' },
     { label: 'Kerentanan kelas', value: snapshot.riskLevel, helper: `${snapshot.riskEventCount} kejadian anonim`, icon: ShieldQuestion, tone: snapshot.riskLevel === 'Rendah' ? 'green' : 'orange' },
@@ -32,7 +33,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
       <section className="welcome-panel">
         <div className="welcome-copy">
           <span className="page-kicker">Ringkasan hari ini</span>
-          <h1>Selamat datang, Bu Rani!</h1>
+          <h1>Selamat datang{firstName ? `, ${firstName}` : ''}!</h1>
           <p><strong>{snapshot.className}</strong> sedang bertumbuh. Ada {snapshot.supportCount} siswa yang mungkin membutuhkan penguatan belajar.</p>
           <BrowserNavigationLink className="welcome-action" href="/dashboard/progres-belajar">Lihat progres kelas <ArrowRight size={18} /></BrowserNavigationLink>
         </div>
@@ -49,7 +50,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
       <section className="overview-grid">
         <article className="surface-card topic-overview-card">
           <div className="section-heading-row"><div><h2>Progres per topik</h2><p>Lihat tingkat penyelesaian dan penguasaan kelas.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/progres-belajar">Buka detail <ChevronRight size={17} /></BrowserNavigationLink></div>
-          {snapshot.topics.length ? <div className="topic-progress-list">{snapshot.topics.map((topic) => <div className="topic-progress-row" key={topic.id}><div className="topic-progress-meta"><div><strong>{topic.name}</strong><span>{topic.completed} siswa selesai</span></div><b>{topic.correctRate}% benar</b></div><div className="thin-progress" aria-label={`${topic.correctRate}% keputusan benar`}><span style={{ width: `${topic.correctRate}%` }} /></div></div>)}</div> : <EmptyState title="Belum ada progres" description="Data topik akan muncul setelah siswa memulai modul." />}
+          {snapshot.topics.length ? <div className="topic-progress-list">{snapshot.topics.map((topic) => <div className="topic-progress-row" key={topic.id}><div className="topic-progress-meta"><div><strong>{topic.name}</strong><span>{topic.completed} siswa selesai</span></div><b>{topic.correctRate}% benar</b></div><div className="thin-progress" aria-label={`${topic.correctRate}% keputusan benar`}><span style={{ transform: `scaleX(${topic.correctRate / 100})` }} /></div></div>)}</div> : <EmptyState title="Belum ada progres" description="Data topik akan muncul setelah siswa memulai modul." />}
         </article>
 
         <article className="surface-card insight-card">
@@ -64,7 +65,7 @@ export function OverviewPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
       <section className="overview-grid lower-overview-grid">
         <article className="surface-card compact-card">
           <div className="section-heading-row"><div><h2>Sinyal perlindungan kelas</h2><p>Agregat anonim untuk pembinaan kolektif.</p></div><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span></div>
-          <div className="risk-mini-row"><span className="solid-icon orange"><ShieldCheck size={22} /></span><div><strong>{snapshot.riskEventCount} kejadian terdeteksi</strong><span>{snapshot.riskDelta > 0 ? 'Meningkat' : 'Menurun'} {Math.abs(snapshot.riskDelta)}% dari periode lalu</span></div></div>
+          <div className="risk-mini-row"><span className="solid-icon green"><ShieldCheck size={22} /></span><div><strong>{snapshot.riskEventCount} kejadian terdeteksi</strong><span>{snapshot.riskDelta === 0 ? 'Sama dengan periode lalu' : `${snapshot.riskDelta > 0 ? 'Meningkat' : 'Menurun'} ${Math.abs(snapshot.riskDelta)}% dari periode lalu`}</span></div></div>
           <BrowserNavigationLink className="text-action" href="/dashboard/peringatan-judi">Buka peringatan kelas <ArrowRight size={17} /></BrowserNavigationLink>
         </article>
 

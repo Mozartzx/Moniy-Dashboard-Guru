@@ -2,35 +2,33 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { teacherDashboardRepository } from '@/lib/moniy/repository';
-import type { ClassroomSnapshot, DataMode } from '@/lib/moniy/types';
+import { periodOptions } from '@/lib/moniy/period';
+import type { ClassroomSnapshot } from '@/lib/moniy/types';
 
-export function useMoniyDashboard() {
-  const [classId, setClassId] = useState('x-a');
-  const [period, setPeriod] = useState('7-hari');
-  const [mode, setMode] = useState<DataMode>('normal');
+export function useMoniyDashboard(classIds: string[]) {
+  const [selectedClassId, setClassId] = useState('');
+  const classId = selectedClassId || classIds[0] || '';
+  const [period, setPeriod] = useState(periodOptions[0].value);
   const [snapshot, setSnapshot] = useState<ClassroomSnapshot | null>(null);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
   const load = useCallback(async () => {
+    if (!classId) return;
     setStatus('loading');
-    if (mode === 'loading') return;
-    if (mode === 'error') {
-      window.setTimeout(() => setStatus('error'), 450);
-      return;
-    }
     try {
       const data = await teacherDashboardRepository.getSnapshot({ classId, period });
-      setSnapshot(mode === 'empty' ? { ...data, topics: [], students: [], communityPosts: [], riskTrend: [] } : data);
+      setSnapshot(data);
       setStatus('success');
     } catch {
       setStatus('error');
     }
-  }, [classId, period, mode]);
+  }, [classId, period]);
 
   useEffect(() => {
+    if (!classId) return;
     const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
-  }, [load]);
+  }, [load, classId]);
 
   const markPostReviewed = useCallback(async (postId: string) => {
     await teacherDashboardRepository.markCommunityPostReviewed(postId);
@@ -50,10 +48,8 @@ export function useMoniyDashboard() {
     setClassId,
     period,
     setPeriod,
-    mode,
-    setMode,
     snapshot,
-    status,
+    status: classId ? status : 'loading' as const,
     reload: load,
     markPostReviewed,
     pendingCommunityCount,

@@ -1,11 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { HandHeart, LockKeyhole, MessageCircleMore, TrendingDown, TrendingUp, UsersRound } from 'lucide-react';
+import { HandHeart, MessageCircleMore, Minus, TrendingDown, TrendingUp, UsersRound } from 'lucide-react';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
+import { useDashboardContext } from '@/components/moniy/dashboard/dashboard-context';
 import { EmptyState } from './page-primitives';
 
 export function RiskPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
+  const { notify } = useDashboardContext();
   const isImproving = snapshot.riskDelta < 0;
   const max = Math.max(...snapshot.riskTrend.map((item) => item.events), 1);
 
@@ -17,7 +19,7 @@ export function RiskPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
         </div>
         <div className="risk-hero-copy">
           <span className="page-kicker">Agregat anonim</span><h1>Peringatan judi online</h1><p>Sinyal preventif tingkat kelas untuk membantu pembinaan kolektif bersama guru BK.</p>
-          <div className="risk-summary-line"><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span><span>{isImproving ? <TrendingDown size={18} /> : <TrendingUp size={18} />} {Math.abs(snapshot.riskDelta)}% dari periode lalu</span></div>
+          <div className="risk-summary-line"><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span><span>{snapshot.riskDelta === 0 ? <><Minus size={18} /> Sama dengan periode lalu</> : <>{isImproving ? <TrendingDown size={18} /> : <TrendingUp size={18} />} {isImproving ? 'Turun' : 'Naik'} {Math.abs(snapshot.riskDelta)}% dari periode lalu</>}</span></div>
         </div>
       </section>
 
@@ -29,11 +31,10 @@ export function RiskPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
         <article className="surface-card coaching-card">
           <span className="card-icon blue"><UsersRound size={23} /></span><h2>Tindak lanjut yang disarankan</h2><p>Fokuskan respons pada edukasi kelas, bukan pemeriksaan individu.</p>
           <div className="coaching-list"><div><span className="solid-icon blue"><MessageCircleMore size={18} /></span><span><strong>Refleksi kelas 15 menit</strong>Bahas ciri tawaran untung cepat dan dampaknya.</span></div><div><span className="solid-icon blue"><HandHeart size={18} /></span><span><strong>Koordinasi dengan guru BK</strong>Gunakan pendekatan preventif untuk seluruh kelas.</span></div></div>
-          <button className="primary-button" type="button" onClick={() => window.alert('Panduan pembinaan demo dibuka. Tidak ada data siswa individual di fitur ini.')}>Buka panduan pembinaan</button>
+          <button className="primary-button" type="button" onClick={() => notify('Panduan pembinaan belum tersedia.')}>Buka panduan pembinaan</button>
         </article>
       </section>
 
-      <section className="privacy-panel"><span><LockKeyhole size={24} /></span><div><h2>Privasi siswa tetap terlindungi</h2><p>Dashboard tidak menyediakan nama, pencarian siswa, isi layar, riwayat perangkat, atau drill-down individual dari data Perisai.</p></div><strong>Hanya tingkat kelas</strong></section>
     </div>
   );
 }

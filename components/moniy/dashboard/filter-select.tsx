@@ -21,7 +21,7 @@ type FilterSelectProps = {
 export function FilterSelect({ label, value, options, icon: Icon, compact, onValueChange }: FilterSelectProps) {
   return (
     <div className={`topbar-select ${compact ? 'compact' : ''}`}>
-      <Select value={value} onValueChange={(nextValue) => nextValue && onValueChange(nextValue)}>
+      <Select items={options} value={value} onValueChange={(nextValue) => nextValue && onValueChange(nextValue)}>
         <SelectTrigger className="topbar-select-trigger" aria-label={label}>
           <span className="topbar-select-icon"><Icon size={18} /></span>
           <span className="topbar-select-copy"><small>{label}</small><SelectValue /></span>
