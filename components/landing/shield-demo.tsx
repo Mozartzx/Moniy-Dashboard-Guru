@@ -8,7 +8,7 @@ export function ShieldDemo() {
 
   return (
     <div className="lp-shield">
-      <div className="lp-shield-card">
+      <div className="lp-shield-card" data-on={on}>
         <Image src="/landing/screens/perisai-mati.webp" alt="" width={780} height={426} sizes="(max-width: 768px) 92vw, 460px" data-active={!on} />
         <Image src="/landing/screens/perisai-aktif.webp" alt="" width={780} height={426} sizes="(max-width: 768px) 92vw, 460px" data-active={on} />
       </div>

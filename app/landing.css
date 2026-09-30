@@ -131,6 +131,8 @@
 @media (scripting: enabled) {
   .lp-reveal { opacity: 0; transform: translateY(20px); transition: opacity 420ms var(--lp-ease) var(--d, 0ms), transform 420ms var(--lp-ease) var(--d, 0ms); }
   .lp-reveal.is-in { opacity: 1; transform: none; }
+  .lp-feature-media.lp-reveal:not(.is-in) { transform: translateY(24px) rotate(2deg) scale(0.96); }
+  .lp-feature-media.lp-reveal { transition-duration: 520ms; }
 }
 
 /* Gerak awal hero dan mascot (dekoratif, hanya bila pengguna tidak membatasi gerak) */
@@ -149,12 +151,16 @@
   .lp-points li:nth-child(2) { --i: 1; }
   .lp-points li:nth-child(3) { --i: 2; }
 }
+@media (prefers-reduced-motion: no-preference) {
+  .lp-shield-card[data-on="true"] { animation: lp-pulse 320ms var(--lp-ease); }
+}
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .lp-points li:hover .lp-point-icon { transform: rotate(-6deg) scale(1.06); }
 }
 @keyframes lp-pop { from { opacity: 0; transform: translateY(18px) scale(0.96); } }
 @keyframes lp-rise { from { opacity: 0; transform: translateY(14px); } }
 @keyframes lp-float { 50% { transform: translateY(-10px); } }
+@keyframes lp-pulse { 50% { transform: scale(1.02); } }
 @media (prefers-reduced-motion: reduce) {
   .lp-reveal { transform: none !important; transition: opacity 200ms linear !important; }
   .lp-screen, .lp-shield-card img, .lp-switch-thumb { transition-duration: 1ms !important; }
