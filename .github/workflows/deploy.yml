@@ -18,7 +18,11 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+      # NEXT_PUBLIC_* are inlined at build time; without them proxy.ts and the login page throw on missing Supabase config
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       # ponytail: vinext 1.0.0-beta.5 standalone output omits its React peer deps; drop this once vinext copies them itself
       - run: cp -r node_modules/{react,react-dom,react-server-dom-webpack,scheduler} dist/standalone/node_modules/
 
