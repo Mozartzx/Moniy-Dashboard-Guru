@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Lexend } from 'next/font/google';
+import { Fredoka, Inter } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({
@@ -7,8 +7,8 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-const lexend = Lexend({
-  variable: '--font-lexend',
+const fredoka = Fredoka({
+  variable: '--font-fredoka',
   subsets: ['latin'],
 });
 
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={`${inter.variable} ${lexend.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${fredoka.variable}`}>{children}</body>
     </html>
   );
 }
