@@ -64,7 +64,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     <div className="dashboard-shell">
       <aside className={`dashboard-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
-          <Image src="/assets/moniy-logo.png" alt="Moniy" width={148} height={43} priority />
+          <BrowserNavigationLink href="/dashboard/ringkasan" className="sidebar-logo-link" aria-label="Moniy, ke ringkasan dashboard" onClick={() => setMobileNavOpen(false)}>
+            <Image src="/assets/moniy-logo.png" alt="" width={148} height={43} priority />
+          </BrowserNavigationLink>
           <button className="sidebar-close" onClick={() => setMobileNavOpen(false)} aria-label="Tutup menu"><X size={21} /></button>
         </div>
         <div className="teacher-product-label"><GraduationCap size={17} /> Dashboard Guru</div>
