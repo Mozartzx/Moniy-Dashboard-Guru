@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const steps = [
   { label: 'Pilih', src: '/landing/screens/kondisi.webp', alt: 'Layar cerita Moniy: pilih salah satu dari tiga supplier dengan harga berbeda.' },
-  { label: 'Hadapi', src: '/landing/screens/kejadian.webp', alt: 'Layar cerita Moniy: kejadian mendadak muncul dan kamu memilih tindakan.' },
+  { label: 'Hadapi', src: '/landing/screens/kejadian.webp', alt: 'Layar cerita Moniy: random event muncul dan kamu memilih tindakan.' },
   { label: 'Lihat hasil', src: '/landing/screens/hasil.webp', alt: 'Layar cerita Moniy: hasil dari supplier yang kamu pilih.' },
 ];
 

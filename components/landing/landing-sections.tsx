@@ -43,8 +43,8 @@ export function Hero() {
           <Image src="/landing/mascot/mascot-wave.webp" alt="Maskot Moniy, monyet biru berhoodie yang melambaikan tangan" width={601} height={720} priority className="lp-mascot" />
         </div>
         <div className="lp-hero-copy">
-          <h1>Cara paling seru untuk belajar keuangan!</h1>
-          <p>Ambil keputusan, hadapi kejadian tak terduga, lalu lihat hasilnya lewat cerita interaktif.</p>
+          <h1>Belajar keuangan lewat cerita yang kamu pilih sendiri</h1>
+          <p>Kamu mengambil keputusan di tengah cerita, lalu melihat apa yang terjadi karenanya.</p>
           <div className="lp-cta-stack">
             <a className="lp-btn lp-btn-primary" href={APP_DOWNLOAD_URL}>Unduh aplikasi</a>
             <BrowserNavigationLink className="lp-btn lp-btn-secondary" href="/login">Masuk sebagai guru</BrowserNavigationLink>
@@ -63,11 +63,11 @@ export function Hero() {
 export function Features() {
   return (
     <>
-      <Feature title="kamu yang menentukan ceritanya" media={<StoryDemo />}>
-        Kamu jadi pemilik bisnis. Pilih supplier, hadapi kejadian mendadak, dan lihat akibat dari setiap keputusanmu.
+      <Feature title="Kamu pemilik bisnisnya" media={<StoryDemo />}>
+        Kamu memegang sebuah bisnis kecil. Supplier yang kamu pilih dan cara kamu menghadapi random event menentukan hasil akhirnya.
       </Feature>
-      <Feature flip title="dapat julukan di akhir cerita" media={<Phone src="/landing/screens/ending.webp" alt="Layar akhir cerita Moniy: lencana Kancil Cerdik sebagai pencapaian dan tombol kembali ke beranda." />}>
-        Setiap cerita berakhir dengan julukan dan pencapaian sesuai keputusanmu. Salah pilih? Tidak apa, coba lagi dan belajar dari hasilnya.
+      <Feature flip title="Julukan di akhir cerita" media={<Phone src="/landing/screens/ending.webp" alt="Layar akhir cerita Moniy: lencana Kancil Cerdik sebagai pencapaian dan tombol kembali ke beranda." />}>
+        Tiap cerita ditutup dengan julukan, misalnya Kancil Cerdik, sesuai keputusanmu. Kalau hasilnya kurang bagus, kamu bisa mengulang ceritanya.
       </Feature>
     </>
   );
@@ -78,8 +78,8 @@ export function ShieldBand() {
     <section className="lp-band">
       <div className="lp-wrap lp-band-inner">
         <Reveal className="lp-feature-copy lp-band-copy">
-          <h2>proteksi judol, cukup sekali nyalakan</h2>
-          <p>Aktifkan Perisai dan Moniy membantu memblokir situs judi online di ponselmu. Guru hanya melihat angka gabungan kelas, tanpa nama siswa.</p>
+          <h2>Nyalakan Perisai untuk memblokir situs judol</h2>
+          <p>Saat Perisai aktif, Moniy memblokir situs judi online di ponselmu. Guru hanya melihat angka gabungan satu kelas, nama siswa tidak pernah muncul.</p>
         </Reveal>
         <Reveal className="lp-band-demo" delay={120}><ShieldDemo /></Reveal>
       </div>
@@ -90,20 +90,20 @@ export function ShieldBand() {
 export function MoreFeatures() {
   return (
     <>
-      <Feature title="ceritamu sendiri, dibuat oleh AI" media={<Phone src="/landing/screens/materi.webp" alt="Layar materi Moniy: cara menghitung laba kotor dengan papan tulis dan rumus." />}>
-        Ketik cerita yang kamu mau, lalu Moniy AI menyusun modulnya. Ada juga materi singkat untuk memahami rumus seperti laba kotor.
+      <Feature title="Buat cerita sendiri dengan Moniy AI" media={<Phone src="/landing/screens/materi.webp" alt="Layar materi Moniy: cara menghitung laba kotor dengan papan tulis dan rumus." />}>
+        Ketik cerita yang kamu inginkan dan Moniy AI menyusunnya menjadi modul. Ada juga materi singkat, misalnya cara menghitung laba kotor.
       </Feature>
-      <Feature flip title="sedikit tiap hari, jadi kebiasaan" media={<Phone src="/landing/screens/beranda.webp" alt="Beranda Moniy: streak pembelajaran mingguan dan tombol lanjutkan modul terakhir." />}>
-        Streak mingguan menemanimu belajar rutin. Lanjutkan modul terakhir dengan satu ketukan, kapan pun kamu sempat.
+      <Feature flip title="Belajar rutin dengan streak mingguan" media={<Phone src="/landing/screens/beranda.webp" alt="Beranda Moniy: streak pembelajaran mingguan dan tombol lanjutkan modul terakhir." />}>
+        Streak mingguan mencatat seberapa rutin kamu belajar. Modul terakhir bisa dilanjutkan dengan satu ketukan.
       </Feature>
     </>
   );
 }
 
 const guruPoints = [
-  { icon: BarChart3, title: 'Progres per topik', text: 'Lihat topik yang sudah dikuasai dan yang perlu penguatan.' },
-  { icon: ShieldCheck, title: 'Sinyal judol tingkat kelas', text: 'Angka gabungan yang anonim, tanpa nama siswa.' },
-  { icon: FileSpreadsheet, title: 'Laporan Excel', text: 'Unduh rekap kelas sekali klik.' },
+  { icon: BarChart3, title: 'Progres per topik', text: 'Lihat topik yang sudah dikuasai dan yang masih perlu diulang.' },
+  { icon: ShieldCheck, title: 'Sinyal judol per kelas', text: 'Angka gabungan satu kelas. Nama siswa tidak ikut tercatat.' },
+  { icon: FileSpreadsheet, title: 'Laporan Excel', text: 'Unduh rekap kelas dalam satu klik.' },
 ];
 
 export function GuruPanel() {
@@ -114,8 +114,8 @@ export function GuruPanel() {
           <div className="lp-guru-top">
             <Image src="/landing/guru-banner.webp" alt="Maskot Moniy duduk di meja, tenang karena proteksi judol aktif" width={1400} height={764} sizes="(max-width: 860px) 92vw, 640px" className="lp-guru-banner" />
             <div className="lp-guru-intro">
-              <h2>untuk guru: pantau kelas dengan tenang</h2>
-              <p>Dashboard guru menampilkan progres belajar dan sinyal judol tingkat kelas, tanpa membuka identitas siswa.</p>
+              <h2>Dashboard untuk guru</h2>
+              <p>Dashboard menampilkan progres belajar dan sinyal judol per kelas. Identitas siswa tidak ditampilkan.</p>
             </div>
           </div>
           <div className="lp-guru-body">
@@ -146,7 +146,7 @@ export function LandingFooter() {
         <nav aria-label="Untuk siswa"><h3>Untuk siswa</h3><a href={APP_DOWNLOAD_URL}>Unduh aplikasi</a></nav>
         <nav aria-label="Untuk guru"><h3>Untuk guru</h3><BrowserNavigationLink href="/login">Masuk sebagai guru</BrowserNavigationLink><BrowserNavigationLink href="/register">Daftar sebagai guru</BrowserNavigationLink></nav>
       </div>
-      <p className="lp-wrap lp-footer-note">Moniy 2026. Belajar keuangan lewat cerita seru.</p>
+      <p className="lp-wrap lp-footer-note">Moniy 2026. Aplikasi belajar keuangan berbasis cerita interaktif.</p>
     </footer>
   );
 }

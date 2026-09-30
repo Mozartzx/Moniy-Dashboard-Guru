@@ -18,7 +18,7 @@ export function ShieldDemo() {
           <span className="lp-switch-thumb" />
         </button>
       </div>
-      <p className="lp-sr" aria-live="polite">{on ? 'Kamu aman karena proteksi dinyalakan.' : 'Proteksi belum dinyalakan.'}</p>
+      <p className="lp-sr" aria-live="polite">{on ? 'Proteksi sudah aktif.' : 'Proteksi belum dinyalakan.'}</p>
     </div>
   );
 }
