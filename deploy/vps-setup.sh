@@ -51,6 +51,10 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:3100;
+        # Supabase session cookies make the auth callback's response headers exceed nginx's default buffers (502)
+        proxy_buffer_size 16k;
+        proxy_buffers 8 16k;
+        proxy_busy_buffers_size 32k;
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
