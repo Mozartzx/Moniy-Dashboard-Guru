@@ -8,7 +8,7 @@
   font-family: var(--font-nunito), Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased;
 }
 .lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
-.lp h1, .lp h2, .lp h3, .lp .lp-btn, .lp .lp-step, .lp .lp-shield-row, .lp .lp-footer-brand { font-family: var(--font-lexend), var(--font-nunito), Arial, sans-serif; }
+.lp h1, .lp h2, .lp h3, .lp .lp-btn, .lp .lp-rail button, .lp .lp-shield-row, .lp .lp-footer-brand { font-family: var(--font-lexend), var(--font-nunito), Arial, sans-serif; }
 :where(.lp) :is(h1, h2, h3, p, ul) { margin: 0; padding: 0; }
 :where(.lp) ul { list-style: none; }
 :where(.lp) a { color: inherit; text-decoration: none; }
@@ -75,11 +75,56 @@
 .lp-screen { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 260ms var(--lp-ease), transform 260ms var(--lp-ease); }
 .lp-screen[data-active="false"] { transform: translateY(8px); }
 .lp-screen[data-active="false"] { opacity: 0; }
-.lp-story { display: grid; justify-items: center; gap: 22px; }
-.lp-steps { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-.lp-step { min-height: 44px; padding: 0 18px; border: 2px solid #d3e0f0; border-radius: var(--lp-radius); background: #fff; color: var(--lp-blue); font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms var(--lp-ease); }
-.lp-step:active { transform: scale(0.97); }
-.lp-step[aria-pressed="true"] { background: var(--lp-blue); border-color: var(--lp-blue); color: #fff; }
+
+/* Cerita yang menempel di layar: langkah aktif diatur JS (data-active), kata-katanya menyala lewat scroll timeline CSS */
+.lp-scrolly { position: relative; timeline-scope: --s1, --s2, --s3; }
+.lp-scrolly-stage { padding-block: clamp(56px, 9vw, 104px); }
+.lp-scrolly-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "title title title" "rail phone copy"; align-items: center; column-gap: clamp(32px, 6vw, 88px); row-gap: clamp(28px, 5vh, 56px); }
+.lp-scrolly-inner h2 { grid-area: title; font-size: clamp(26px, 3.6vw, 44px); font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; color: var(--lp-blue); }
+.lp-rail { position: relative; grid-area: rail; justify-self: start; display: grid; gap: 4px; width: min(100%, 260px); }
+.lp-rail::before, .lp-rail button::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 2px; }
+.lp-rail::before { background: var(--lp-line); }
+.lp-rail button { display: block; width: 100%; min-height: 44px; position: relative; padding: 10px 0 10px 23px; border: 0; background: none; color: #667790; font-family: var(--font-lexend), var(--font-nunito), Arial, sans-serif; font-size: clamp(17px, 1.6vw, 20px); font-weight: 500; line-height: 1.3; text-align: left; cursor: pointer; transition: color 200ms ease, transform 120ms var(--lp-ease); }
+.lp-rail button::before { background: var(--lp-blue); transform: scaleY(0); transition: transform 200ms var(--lp-ease); }
+.lp-rail button[aria-current="step"] { color: var(--lp-navy); font-weight: 700; }
+.lp-rail button[aria-current="step"]::before { transform: scaleY(1); }
+.lp-rail button:active { transform: scale(0.98); }
+@media (hover: hover) and (pointer: fine) { .lp-rail button:hover { color: var(--lp-navy); } }
+.lp-rail-n { display: none; }
+.lp-scrolly-phone { grid-area: phone; }
+.lp-scrolly-phone .lp-phone { width: min(300px, 72vw, calc((100svh - 300px) * 0.46)); }
+.lp-scrolly-copywrap { grid-area: copy; display: grid; }
+.lp-scrolly-copy { max-width: 380px; margin-block: 0 24px; font-size: clamp(18px, 1.7vw, 22px); font-weight: 600; line-height: 1.6; color: var(--lp-ink); }
+.lp-scrolly-runway > div { height: 100svh; }
+.lp-scrolly-runway > :nth-child(1) { view-timeline: --s1 block; }
+.lp-scrolly-runway > :nth-child(2) { view-timeline: --s2 block; }
+.lp-scrolly-runway > :nth-child(3) { view-timeline: --s3 block; }
+.lp-scrolly-runway { display: none; }
+.lp-scrolly-runway::after { content: ""; display: block; height: 30svh; }
+
+/* Mode menempel hanya bila JS aktif; tanpa JS teks tersusun biasa dan terbaca semua */
+@media (scripting: enabled) {
+  .lp-scrolly-runway { display: block; margin-top: calc(72px - 100svh); pointer-events: none; }
+  .lp-scrolly-stage { position: sticky; top: 72px; display: grid; align-items: center; height: calc(100svh - 72px); padding-block: 24px; }
+  .lp-scrolly-copy { grid-area: 1 / 1; margin: 0; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 240ms var(--lp-ease), transform 240ms var(--lp-ease); }
+  .lp-scrolly-copy[data-active="true"] { opacity: 1; transform: none; pointer-events: auto; }
+}
+
+/* Kata menyala mengikuti scroll. Jendela 3 kata bergeser dari --a sepanjang --s perjalanan blok langkah. Langkah 1 baru mulai di 46% karena bagian baru menempel di layar pada titik itu; ruang tambahan di ujung runway memberi langkah 3 waktu selesai */
+@keyframes lp-word { from { opacity: 0.2; } to { opacity: 1; } }
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .lp-w { opacity: 0.2; animation: lp-word linear both; animation-range: cover calc(var(--a, 30%) + var(--s, 30%) * var(--i) / var(--n)) cover calc(var(--a, 30%) + var(--s, 30%) * (var(--i) + 3) / var(--n)); }
+    .lp-scrolly-copy:nth-child(1) { --a: 46%; --s: 22%; }
+    .lp-scrolly-copy:nth-child(1) .lp-w { animation-timeline: --s1; }
+    .lp-scrolly-copy:nth-child(2) .lp-w { animation-timeline: --s2; }
+    .lp-scrolly-copy:nth-child(3) .lp-w { animation-timeline: --s3; }
+  }
+  @supports not (animation-timeline: view()) {
+    .lp-w { opacity: 0.2; transition: opacity 300ms var(--lp-ease) calc(var(--i) * 25ms); }
+    .lp-scrolly-copy[data-active="true"] .lp-w { opacity: 1; }
+  }
+}
 
 /* Band Perisai */
 .lp-band { padding-block: clamp(64px, 9vw, 104px); background: var(--lp-navy); color: #fff; }
@@ -165,10 +210,22 @@
   .lp-reveal { transform: none !important; transition: opacity 200ms linear !important; }
   .lp-screen, .lp-shield-card img, .lp-switch-thumb { transition-duration: 1ms !important; }
   .lp-screen[data-active="false"] { transform: none; }
+  .lp-scrolly-copy { transform: none !important; }
 }
 
 /* Tablet dan ponsel */
 @media (max-width: 860px) {
+  .lp-scrolly-inner { grid-template-columns: 1fr; grid-template-areas: "title" "phone" "rail" "copy"; justify-items: center; row-gap: 14px; }
+  .lp-scrolly-inner h2 { justify-self: start; }
+  .lp-scrolly-phone .lp-phone { width: min(260px, 60vw, calc((100svh - 330px) * 0.46)); }
+  .lp-rail { justify-self: center; display: flex; gap: 10px; width: auto; }
+  .lp-rail::before, .lp-rail button::before { display: none; }
+  .lp-rail button { display: grid; place-items: center; width: 44px; margin: 0; padding: 0; border: 2px solid #d3e0f0; border-radius: 50%; }
+  .lp-rail button[aria-current="step"] { border-color: var(--lp-blue); background: var(--lp-blue); color: #fff; }
+  .lp-rail-n { display: block; font-size: 16px; }
+  .lp-rail-l { display: none; }
+  .lp-scrolly-copywrap { justify-self: stretch; }
+  .lp-scrolly-copy { max-width: 46ch; font-size: 17px; }
   .lp-hero { min-height: auto; }
   .lp-hero-main { grid-template-columns: 1fr; gap: 12px; padding-block: 16px 32px; }
   .lp-hero-art { width: min(240px, 60vw); }

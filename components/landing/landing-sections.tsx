@@ -5,7 +5,7 @@ import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-lin
 import { APP_DOWNLOAD_URL } from './landing-config';
 import { Reveal } from './reveal';
 import { ShieldDemo } from './shield-demo';
-import { StoryDemo } from './story-demo';
+import { StoryScroll } from './story-scroll';
 
 const topics = [
   { label: 'Manajemen keuangan pribadi', icon: Wallet },
@@ -63,9 +63,7 @@ export function Hero() {
 export function Features() {
   return (
     <>
-      <Feature title="Kamu pemilik bisnisnya" media={<StoryDemo />}>
-        Kamu memegang sebuah bisnis kecil. Supplier yang kamu pilih dan cara kamu menghadapi random event menentukan hasil akhirnya.
-      </Feature>
+      <StoryScroll />
       <Feature flip title="Julukan di akhir cerita" media={<Phone src="/landing/screens/ending.webp" alt="Layar akhir cerita Moniy: lencana Kancil Cerdik sebagai pencapaian dan tombol kembali ke beranda." />}>
         Tiap cerita ditutup dengan julukan, misalnya Kancil Cerdik, sesuai keputusanmu. Kalau hasilnya kurang bagus, kamu bisa mengulang ceritanya.
       </Feature>

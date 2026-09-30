@@ -62,3 +62,10 @@ Rencana lengkap: `C:\Users\ASUS Vivobook\.claude\plans\gleaming-cuddling-waffle.
       belum dilakukan, di luar akses saya (Git policy: user yang commit/push & deploy).
 - [ ] Uji Google Sign-In end-to-end (butuh akun Google asli, tidak bisa diotomasi penuh di sesi
       ini) dan uji alur onboarding-kelas dengan sesi guru yang benar-benar login.
+
+# Cerita yang menempel di layar (scrollytelling)
+
+- [x] `components/landing/story-scroll.tsx` menggantikan `StoryDemo`: rail langkah, ponsel, paragraf yang kata-katanya menyala mengikuti scroll (CSS scroll-driven animation, hanya opacity)
+- [x] Cadangan: tanpa JS teks tersusun biasa; browser tanpa `animation-timeline` menyalakan kata bertahap saat langkah aktif; reduced motion tanpa scrub dan tanpa geser
+- [x] Review (impeccable, emil, ux-heuristics, animation-vocabulary): stage sticky melewati ujung seksi (margin negatif), langkah 3 kehabisan jalan, langkah 1 sudah menyala sebelum menempel, gambar lazy berkedip, detektor menandai border-left
+- Catatan uji: tab Chrome yang tidak fokus tidak memajukan transisi sampai ada frame baru, jadi screenshot pertama setelah lompatan scroll kadang menampilkan layar ponsel kosong. Bukan bug halaman.
