@@ -10,9 +10,9 @@ export type HeroSprite = {
 
 export const heroSprites: HeroSprite[] = [
   { id: 'moniy-utama', w: 502, h: 560, x: 5, y: 25, s: 270, d: 10, a: 'squash', t: 5.6, e: 0, eager: true, blink: { t: 5.2, e: 1.1, left: 32.89, top: 26.53, width: 42.59, w: 214, h: 110 }, m: [3, 75, 112] },
-  { id: 'm-coin', w: 250, h: 340, x: 21.5, y: 3, s: 128, d: 16, a: 'bob', t: 5.8, e: 0.4, amp: 9 },
+  { id: 'bag', w: 219, h: 260, x: 21.5, y: 3, s: 100, d: 16, a: 'bob', t: 5.8, e: 0.4, amp: 9 },
   { id: 'coin-front', w: 260, h: 260, x: 2.5, y: 9, s: 78, d: 18, a: 'coin', t: 4.8, e: 0.2 },
-  { id: 'm-bag', w: 315, h: 340, x: 19.5, y: 60, s: 140, d: 14, a: 'bob', t: 6.1, e: 1.2, m: [38, 78, 96] },
+  { id: 'piggy', w: 260, h: 234, x: 19.5, y: 60, s: 124, d: 14, a: 'bob', t: 6.1, e: 1.2, m: [38, 78, 96] },
   { id: 'coin-stack', w: 233, h: 260, x: 2.5, y: 72, s: 86, d: 20, a: 'bob', t: 5.2, e: 0.8 },
   { id: 'heart-r', w: 200, h: 166, x: 25.5, y: 40, s: 54, d: 22, a: 'sway', t: 4.6, e: 0.9, rot: 8 },
   { id: 'star-y', w: 200, h: 187, x: 1.5, y: 52, s: 40, d: 26, a: 'sway', t: 5.2, e: 0.3, m: [2, 68, 26] },
@@ -23,8 +23,8 @@ export const heroSprites: HeroSprite[] = [
   { id: 'spark-big', w: 198, h: 200, x: 29, y: 80, s: 40, d: 30, a: 'twinkle', t: 2.4, e: 1.5, m: [90, 86, 26] },
   { id: 'coin-tilt', w: 245, h: 260, x: 28.5, y: 57, s: 52, d: 20, a: 'coin', t: 4.2, e: 1.1 },
   { id: 'moniy-roket', w: 451, h: 560, x: 73, y: 17, s: 280, d: 10, a: 'squash', t: 6.0, e: 0.5, eager: true, m: [54, 1, 118], blink: { t: 4.6, e: 2.3, left: 29.39, top: 16.98, width: 37.7, w: 170, h: 111 } },
-  { id: 'm-chart', w: 340, h: 303, x: 87.5, y: 3, s: 128, d: 14, a: 'bob', t: 5.5, e: 0.8, m: [2, 1, 88] },
-  { id: 'm-shield', w: 332, h: 340, x: 87.5, y: 55, s: 132, d: 14, a: 'bob', t: 6.0, e: 1.2, m: [70, 77, 92] },
+  { id: 'chart', w: 242, h: 260, x: 87.5, y: 3, s: 104, d: 14, a: 'bob', t: 5.5, e: 0.8, m: [7, 2, 78] },
+  { id: 'shield', w: 260, h: 208, x: 87.5, y: 55, s: 112, d: 14, a: 'bob', t: 6.0, e: 1.2, m: [70, 77, 92] },
   { id: 'magni', w: 260, h: 223, x: 70, y: 40, s: 66, d: 18, a: 'sway', t: 5.6, e: 0.6 },
   { id: 'plane', w: 240, h: 204, x: 70.5, y: 4, s: 62, d: 20, a: 'sway', t: 5.0, e: 0.1, m: [32, 2, 44] },
   { id: 'coin-front', w: 260, h: 260, x: 95, y: 34, s: 56, d: 20, a: 'coin', t: 4.5, e: 0.9, m: [86, 12, 32] },
