@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { LandingHeader } from '@/components/landing/landing-header';
 import { Features, GuruPanel, Hero, LandingFooter, MoreFeatures, ShieldBand } from '@/components/landing/landing-sections';
+import { ScenarioWall } from '@/components/landing/scenario-wall';
 import './landing.css';
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function Home() {
       <LandingHeader />
       <main id="lp-main">
         <Hero />
+        <ScenarioWall />
         <Features />
         <ShieldBand />
         <MoreFeatures />
