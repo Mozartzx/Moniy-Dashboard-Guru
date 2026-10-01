@@ -3,6 +3,8 @@ import { BarChart3, FileSpreadsheet, PiggyBank, ShieldCheck, Store, TrendingUp, 
 import type { ReactNode } from 'react';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { APP_DOWNLOAD_URL } from './landing-config';
+import { HeroSprites } from './hero-sprites';
+import { HeroStage } from './hero-stage';
 import { Reveal } from './reveal';
 import { ShieldDemo } from './shield-demo';
 import { StoryScroll } from './story-scroll';
@@ -38,10 +40,7 @@ function Feature({ title, children, media, flip = false }: { title: string; chil
 export function Hero() {
   return (
     <section className="lp-hero" id="lp-hero">
-      <div className="lp-wrap lp-hero-main">
-        <div className="lp-hero-art">
-          <Image src="/landing/mascot/mascot-wave.webp" alt="Maskot Moniy, monyet biru berhoodie yang melambaikan tangan" width={601} height={720} priority className="lp-mascot" />
-        </div>
+      <HeroStage layer={<HeroSprites />}>
         <div className="lp-hero-copy">
           <h1>Belajar keuangan lewat cerita yang kamu pilih sendiri</h1>
           <p>Kamu mengambil keputusan di tengah cerita, lalu melihat apa yang terjadi karenanya.</p>
@@ -50,7 +49,7 @@ export function Hero() {
             <BrowserNavigationLink className="lp-btn lp-btn-secondary" href="/login">Masuk sebagai guru</BrowserNavigationLink>
           </div>
         </div>
-      </div>
+      </HeroStage>
       <ul className="lp-topics" aria-label="Topik yang bisa dipelajari">
         {topics.map(({ label, icon: Icon }) => (
           <li key={label}><Icon size={20} strokeWidth={2.2} aria-hidden="true" />{label}</li>

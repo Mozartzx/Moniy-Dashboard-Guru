@@ -45,15 +45,34 @@
 .lp-header[data-stuck="true"] .lp-header-cta:active { transform: translateY(4px); }
 
 /* Hero */
+/* Hero: panggung dengan klaster sprite di kiri dan kanan, teks di tengah. Posisi sprite ada di components/landing/hero-layout.ts */
 .lp-hero { min-height: calc(100dvh - 72px); display: grid; grid-template-rows: 1fr auto; }
-.lp-hero-main { display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: clamp(24px, 5vw, 72px); padding-block: 24px; }
-.lp-hero-art { justify-self: center; width: min(400px, 100%); }
-.lp-mascot { width: 100%; height: auto; }
-.lp-hero-art::after { content: ""; display: block; width: 56%; height: 18px; margin: 6px auto 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 104, 229, 0.22), transparent); }
-.lp-hero-copy { display: grid; justify-items: center; gap: 16px; text-align: center; }
-.lp-hero-copy h1 { max-width: 22ch; font-size: clamp(28px, 3.1vw, 40px); font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; color: var(--lp-ink); }
-.lp-hero-copy p { max-width: 36ch; font-size: 18px; line-height: 1.6; color: var(--lp-body); }
-.lp-cta-stack { display: grid; gap: 14px; width: min(340px, 100%); margin-top: 8px; }
+.lp-hero-stage { --px: 0; --py: 0; position: relative; overflow: hidden; display: grid; place-items: center; min-height: clamp(540px, 72dvh, 700px); container-type: inline-size; isolation: isolate; }
+.hs-blob { position: absolute; aspect-ratio: 1; border-radius: 50%; background: #f3f1e9; z-index: 0; }
+.hs-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hs { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--s) * 0.06944cqw); transform: translate(calc(var(--px) * var(--d) * 1px), calc(var(--py) * var(--d) * 1px)); transition: transform 380ms var(--lp-ease); animation: hs-pop 560ms var(--lp-ease) both; animation-delay: calc(var(--n) * 35ms + 120ms); }
+.hs-big { z-index: 2; }
+.hs-in { position: relative; transform-origin: 50% 92%; animation: var(--anim) var(--dur) ease-in-out var(--delay) infinite; will-change: transform; }
+.hs-in img { display: block; width: 100%; height: auto; user-select: none; }
+.hs-in .hs-blink { position: absolute; height: auto; opacity: 0; animation: hs-blink var(--bt) linear var(--bd) infinite; }
+.hs-squig { position: absolute; left: 12%; top: 5%; width: calc(110px * 0.06944cqw * 14.4 / 1.1); max-width: 150px; }
+.hs-squig path { stroke: #12c07a; stroke-width: 7; stroke-linecap: round; fill: none; stroke-dasharray: 160; stroke-dashoffset: 160; animation: hs-draw 5.5s ease-in-out infinite; }
+.lp-hero-copy { position: relative; z-index: 3; display: grid; justify-items: center; gap: 16px; text-align: center; padding: 40px 20px; max-width: 620px; }
+.lp-hero-copy h1 { max-width: 15ch; font-size: clamp(34px, 4.2vw, 58px); font-weight: 500; line-height: 1.06; letter-spacing: -0.02em; color: var(--lp-ink); text-wrap: balance; }
+.lp-hero-copy p { max-width: 32ch; font-size: 18px; line-height: 1.6; color: var(--lp-body); }
+.lp-cta-stack { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 8px; }
+.hs-pause { position: absolute; right: 16px; bottom: 14px; z-index: 5; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: #fff; color: var(--lp-body); font: 600 13px/1 var(--font-inter), sans-serif; box-shadow: inset 0 0 0 2px var(--lp-line); cursor: pointer; transition: transform 120ms var(--lp-ease); }
+.hs-pause:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .hs-pause:hover { color: var(--lp-blue-deep); } }
+.lp-hero-stage[data-paused="true"] :is(.hs-in, .hs-blink, .hs-squig path, .hs), .lp-hero-stage[data-off="true"] :is(.hs-in, .hs-blink, .hs-squig path) { animation-play-state: paused; }
+@keyframes hs-pop { from { opacity: 0; translate: 0 16px; scale: 0.9; } }
+@keyframes hs-bob { 0%, 100% { transform: translateY(0) rotate(calc(var(--rot) * -1deg)); } 50% { transform: translateY(calc(var(--amp) * -1px)) rotate(calc(var(--rot) * 1deg)); } }
+@keyframes hs-squash { 0%, 100% { transform: scale(1, 1) rotate(-2.5deg); } 50% { transform: scale(1.025, 0.965) translateY(-8px) rotate(2.5deg); } }
+@keyframes hs-twinkle { 0%, 100% { transform: scale(0.45) rotate(0deg); opacity: 0.35; } 50% { transform: scale(1.1) rotate(35deg); opacity: 1; } }
+@keyframes hs-coin { 0%, 100% { transform: translateY(0) scaleX(1); } 25% { transform: translateY(-6px) scaleX(0.45); } 50% { transform: translateY(-11px) scaleX(1); } 75% { transform: translateY(-5px) scaleX(0.5); } }
+@keyframes hs-sway { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg) translateY(-6px); } }
+@keyframes hs-blink { 0%, 90%, 96%, 100% { opacity: 0; } 91%, 95% { opacity: 1; } }
+@keyframes hs-draw { 0% { stroke-dashoffset: 160; } 35%, 60% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -160; } }
 .lp-topics { display: flex; justify-content: center; gap: 8px; padding: 14px 24px; border-top: 1px solid var(--lp-line); overflow-x: auto; scrollbar-width: none; }
 .lp-topics::-webkit-scrollbar { display: none; }
 .lp-topics li { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; font-family: var(--font-fredoka), sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--lp-body); }
@@ -183,8 +202,6 @@
 
 /* Gerak awal hero dan mascot (dekoratif, hanya bila pengguna tidak membatasi gerak) */
 @media (prefers-reduced-motion: no-preference) {
-  .lp-hero-art { animation: lp-pop 700ms var(--lp-ease) both; }
-  .lp-mascot { animation: lp-float 5.5s ease-in-out 900ms infinite; }
   .lp-hero-copy > * { animation: lp-rise 560ms var(--lp-ease) both; }
   .lp-hero-copy > :nth-child(1) { animation-delay: 120ms; }
   .lp-hero-copy > :nth-child(2) { animation-delay: 180ms; }
@@ -203,19 +220,27 @@
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .lp-points li:hover .lp-point-icon { transform: rotate(-6deg) scale(1.06); }
 }
-@keyframes lp-pop { from { opacity: 0; transform: translateY(18px) scale(0.96); } }
 @keyframes lp-rise { from { opacity: 0; transform: translateY(14px); } }
-@keyframes lp-float { 50% { transform: translateY(-10px); } }
 @keyframes lp-pulse { 50% { transform: scale(1.02); } }
 @media (prefers-reduced-motion: reduce) {
   .lp-reveal { transform: none !important; transition: opacity 200ms linear !important; }
   .lp-screen, .lp-shield-card img, .lp-switch-thumb { transition-duration: 1ms !important; }
+  .hs, .hs-in, .hs-in .hs-blink, .hs-squig path { animation: none !important; transform: none; transition: none; }
+  .hs-in .hs-blink, .hs-pause { display: none; }
+  .hs-squig path { stroke-dashoffset: 0; }
   .lp-screen[data-active="false"] { transform: none; }
   .lp-scrolly-copy { transform: none !important; }
 }
 
 /* Tablet dan ponsel */
 @media (max-width: 860px) {
+  .lp-hero-stage { min-height: 740px; }
+  .hs-squig { display: none; }
+  .hs-pause { right: auto; left: 50%; bottom: 8px; translate: -50% 0; }
+  .hs { left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: calc(var(--ms) * 1px); }
+  .hs-nm { display: none; }
+  .lp-hero-copy { padding: 0 20px; }
+  .lp-hero-copy h1 { font-size: clamp(32px, 8.4vw, 42px); }
   .lp-scrolly-inner { grid-template-columns: 1fr; grid-template-areas: "title" "phone" "rail" "copy"; justify-items: center; row-gap: 14px; }
   .lp-scrolly-inner h2 { justify-self: start; }
   .lp-scrolly-phone .lp-phone { width: min(260px, 60vw, calc((100svh - 330px) * 0.46)); }
@@ -227,9 +252,6 @@
   .lp-rail-l { display: none; }
   .lp-scrolly-copywrap { justify-self: stretch; }
   .lp-scrolly-copy { max-width: 46ch; font-size: 17px; }
-  .lp-hero { min-height: auto; }
-  .lp-hero-main { grid-template-columns: 1fr; gap: 12px; padding-block: 16px 32px; }
-  .lp-hero-art { width: min(240px, 60vw); }
   .lp-feature-grid { grid-template-columns: 1fr; text-align: center; }
   .lp-feature-grid[data-flip="true"] .lp-feature-media { order: 0; }
   .lp-feature-copy { justify-items: center; max-width: 520px; margin-inline: auto; }
