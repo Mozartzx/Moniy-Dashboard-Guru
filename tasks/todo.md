@@ -69,3 +69,11 @@ Rencana lengkap: `C:\Users\ASUS Vivobook\.claude\plans\gleaming-cuddling-waffle.
 - [x] Cadangan: tanpa JS teks tersusun biasa; browser tanpa `animation-timeline` menyalakan kata bertahap saat langkah aktif; reduced motion tanpa scrub dan tanpa geser
 - [x] Review (impeccable, emil, ux-heuristics, animation-vocabulary): stage sticky melewati ujung seksi (margin negatif), langkah 3 kehabisan jalan, langkah 1 sudah menyala sebelum menempel, gambar lazy berkedip, detektor menandai border-left
 - Catatan uji: tab Chrome yang tidak fokus tidak memajukan transisi sampai ada frame baru, jadi screenshot pertama setelah lompatan scroll kadang menampilkan layar ponsel kosong. Bukan bug halaman.
+
+# Landing: seksi setelah skenario dibangun ulang (acuan Teyro dan Family)
+
+- [x] Analisis teyro.app (Baloo 2 800 + Plus Jakarta Sans, pita putih dan biru muda bergantian, judul dengan frasa biru, baris fitur dengan kartu ponsel mengambang dan daftar centang, kartu biru besar dengan tepi bawah tebal, FAQ akordeon, reveal naik dan memudar, tombol 3D 150ms) dan family.co (kartu bento abu hangat dengan widget mini hidup, judul 500 dengan tracking rapat, baris fitur dengan aksen warna per seksi, "Details that matter" dengan judul menempel dan kartu bertumpuk, marquee testimoni, FAQ sederhana)
+- [x] Hapus seksi lama di bawah skenario (tanpa membaca isinya); simpan hero, skenario, header, tombol
+- [x] Seksi baru: Apa itu Moniy, Cara kerja (tab otomatis + ponsel), Fitur (bento 5 kartu dengan widget mini), Untuk guru (kartu biru), FAQ (akordeon), CTA (dua Moniy), Footer
+- [x] Header: tautan navigasi ke bagian halaman
+- Catatan: tidak ada testimoni (tidak ada data nyata); klaim hanya yang ada di aplikasi dan skema; tautan unduh masih placeholder `#unduh`

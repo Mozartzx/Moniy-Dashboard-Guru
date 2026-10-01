@@ -23,6 +23,12 @@ export function LandingHeader() {
         <BrowserNavigationLink href="/" aria-label="Moniy, ke beranda">
           <Image src="/landing/logo.webp" alt="Moniy" width={520} height={150} className="lp-logo" priority />
         </BrowserNavigationLink>
+        <nav className="lp-nav" aria-label="Bagian halaman">
+          <a href="#tentang">Apa itu Moniy</a>
+          <a href="#cara-kerja">Cara kerja</a>
+          <a href="#fitur">Fitur</a>
+          <a href="#faq">FAQ</a>
+        </nav>
         <div className="lp-header-actions">
           <BrowserNavigationLink className="lp-link" href="/login">Masuk sebagai guru</BrowserNavigationLink>
           <a className="lp-btn lp-btn-primary lp-btn-sm lp-header-cta" href={APP_DOWNLOAD_URL}>Unduh aplikasi</a>
