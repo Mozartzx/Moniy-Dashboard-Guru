@@ -1,12 +1,10 @@
 'use client';
 
-import { Pause, Play } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
-/** Panggung hero: parallax halus mengikuti kursor (hanya mouse), jeda saat keluar layar, dan tombol jeda untuk pengguna. */
+/** Panggung hero: parallax halus mengikuti kursor (hanya mouse) dan jeda animasi saat keluar layar. */
 export function HeroStage({ layer, children }: { layer: ReactNode; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -40,17 +38,13 @@ export function HeroStage({ layer, children }: { layer: ReactNode; children: Rea
   }, []);
 
   return (
-    <div className="lp-hero-stage" ref={ref} data-paused={paused}>
+    <div className="lp-hero-stage" ref={ref}>
       <div className="hs-blob" style={{ left: '-6%', top: '14%', width: '34%' }} aria-hidden="true" />
       <div className="hs-blob" style={{ right: '-8%', top: '38%', width: '30%' }} aria-hidden="true" />
       <div className="hs-blob hs-nm" style={{ left: '20%', top: '68%', width: '13%' }} aria-hidden="true" />
       <div className="hs-blob hs-nm" style={{ right: '24%', top: '4%', width: '11%' }} aria-hidden="true" />
       {layer}
       {children}
-      <button type="button" className="hs-pause" aria-pressed={paused} onClick={() => setPaused((value) => !value)}>
-        {paused ? <Play size={16} strokeWidth={2.4} aria-hidden="true" /> : <Pause size={16} strokeWidth={2.4} aria-hidden="true" />}
-        {paused ? 'Putar gerak' : 'Jeda gerak'}
-      </button>
     </div>
   );
 }

@@ -61,10 +61,7 @@
 .lp-hero-copy h1 { max-width: 15ch; font-size: clamp(34px, 4.2vw, 58px); font-weight: 500; line-height: 1.06; letter-spacing: -0.02em; color: var(--lp-ink); text-wrap: balance; }
 .lp-hero-copy p { max-width: 32ch; font-size: 18px; line-height: 1.6; color: var(--lp-body); }
 .lp-cta-stack { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 8px; }
-.hs-pause { position: absolute; right: 16px; bottom: 14px; z-index: 5; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: #fff; color: var(--lp-body); font: 600 13px/1 var(--font-inter), sans-serif; box-shadow: inset 0 0 0 2px var(--lp-line); cursor: pointer; transition: transform 120ms var(--lp-ease); }
-.hs-pause:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) { .hs-pause:hover { color: var(--lp-blue-deep); } }
-.lp-hero-stage[data-paused="true"] :is(.hs-in, .hs-blink, .hs-squig path, .hs), .lp-hero-stage[data-off="true"] :is(.hs-in, .hs-blink, .hs-squig path) { animation-play-state: paused; }
+.lp-hero-stage[data-off="true"] :is(.hs-in, .hs-blink, .hs-squig path) { animation-play-state: paused; }
 @keyframes hs-pop { from { opacity: 0; translate: 0 16px; scale: 0.9; } }
 @keyframes hs-bob { 0%, 100% { transform: translateY(0) rotate(calc(var(--rot) * -1deg)); } 50% { transform: translateY(calc(var(--amp) * -1px)) rotate(calc(var(--rot) * 1deg)); } }
 @keyframes hs-squash { 0%, 100% { transform: scale(1, 1) rotate(-2.5deg); } 50% { transform: scale(1.025, 0.965) translateY(-8px) rotate(2.5deg); } }
@@ -226,7 +223,7 @@
   .lp-reveal { transform: none !important; transition: opacity 200ms linear !important; }
   .lp-screen, .lp-shield-card img, .lp-switch-thumb { transition-duration: 1ms !important; }
   .hs, .hs-in, .hs-in .hs-blink, .hs-squig path { animation: none !important; transform: none; transition: none; }
-  .hs-in .hs-blink, .hs-pause { display: none; }
+  .hs-in .hs-blink { display: none; }
   .hs-squig path { stroke-dashoffset: 0; }
   .lp-screen[data-active="false"] { transform: none; }
   .lp-scrolly-copy { transform: none !important; }
@@ -236,7 +233,6 @@
 @media (max-width: 860px) {
   .lp-hero-stage { min-height: 740px; }
   .hs-squig { display: none; }
-  .hs-pause { right: auto; left: 50%; bottom: 8px; translate: -50% 0; }
   .hs { left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: calc(var(--ms) * 1px); }
   .hs-nm { display: none; }
   .lp-hero-copy { padding: 0 20px; }
