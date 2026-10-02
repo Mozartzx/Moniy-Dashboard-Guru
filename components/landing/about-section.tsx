@@ -1,6 +1,5 @@
 'use client';
 
-import { Check } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { PhoneFrame, phoneScreens } from './phone-frame';
@@ -13,9 +12,9 @@ const steps = [
 ];
 
 const points = [
-  'Cerita bercabang: tiap pilihan membawa ke akhir yang berbeda.',
-  'Belajar dari akibat keputusanmu, bukan dari hafalan.',
-  'Guru memantau kelas tanpa membuka identitas siswa.',
+  'Pilihanmu menentukan akhir ceritanya.',
+  'Salah ambil keputusan? Ruginya di cerita, bukan di dompetmu.',
+  'Guru memantau progres kelas, bukan mengintip siswa.',
 ];
 
 export function AboutSection() {
@@ -39,15 +38,14 @@ export function AboutSection() {
       <div className="lp-wrap nx-split">
         <Rv className="nx-copy">
           <p className="nx-eyebrow">Apa itu Moniy</p>
-          <h2 className="nx-h2" id="nx-about-title">Belajar uang paling seru kalau <em>kamu yang menentukan ceritanya</em>.</h2>
-          <p className="nx-lede">Moniy adalah aplikasi belajar keuangan dan wirausaha untuk siswa SMA. Kamu jadi pemilik bisnis kecil, mengambil keputusan, menghadapi kejadian tak terduga, lalu melihat akibatnya.</p>
+          <h2 className="nx-h2" id="nx-about-title">Kamu jadi pemilik usaha. Uangnya <em>kamu yang atur</em>.</h2>
+          <p className="nx-lede">Moniy adalah aplikasi belajar keuangan untuk siswa SMA. Kamu memilih supplier, lalu sesekali dihantam random event seperti listrik padam. Setelah itu saldo usahamu berubah sesuai keputusanmu.</p>
           <ul className="nx-checks">
-            {points.map((point) => <li key={point}><span className="nx-check"><Check size={14} strokeWidth={3} aria-hidden="true" /></span>{point}</li>)}
+            {points.map((point) => <li key={point}><span className="nx-check" aria-hidden="true" />{point}</li>)}
           </ul>
         </Rv>
         <Rv className="nx-visual-wrap" delay={140}>
           <div className="nx-visual" ref={ref}>
-            <div className="nx-visual-glow" aria-hidden="true" />
             <PhoneFrame screens={steps.map((step) => step.screen)} index={active} />
             <ul className="nx-chips" aria-hidden="true">
               {steps.map((step, i) => <li key={step.label} data-i={i} data-on={i === active}>{step.label}</li>)}

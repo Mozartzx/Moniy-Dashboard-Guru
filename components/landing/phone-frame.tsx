@@ -13,7 +13,7 @@ export function PhoneFrame({ screens, index }: { screens: ReadonlyArray<{ src: s
     <div className="nx-phone">
       <div className="nx-phone-screen">
         {screens.map((screen, i) => (
-          <Image key={screen.src} src={screen.src} alt={screen.alt} width={780} height={1688} sizes="(max-width: 860px) 62vw, 300px" className="nx-screen" data-active={i === index} aria-hidden={i !== index} loading={i === 0 ? 'eager' : 'lazy'} />
+          <Image key={screen.src} src={screen.src} alt={screen.alt} width={780} height={1688} sizes="(max-width: 860px) 62vw, 300px" className="nx-screen" data-active={i === index} aria-hidden={i !== index} loading="eager" fetchPriority={i === 0 ? 'auto' : 'low'} />
         ))}
       </div>
     </div>

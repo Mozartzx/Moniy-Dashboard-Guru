@@ -17,7 +17,7 @@ export function Hero() {
       <HeroStage layer={<HeroSprites />}>
         <div className="lp-hero-copy">
           <h1>Belajar keuangan lewat cerita yang kamu pilih sendiri</h1>
-          <p>Kamu mengambil keputusan di tengah cerita, lalu melihat apa yang terjadi karenanya.</p>
+          <p>Ambil keputusan di tengah cerita, lalu lihat sendiri uangmu naik atau amblas.</p>
           <div className="lp-cta-stack">
             <a className="lp-btn lp-btn-primary" href={APP_DOWNLOAD_URL}>Unduh aplikasi</a>
             <BrowserNavigationLink className="lp-btn lp-btn-secondary" href="/login">Masuk sebagai guru</BrowserNavigationLink>

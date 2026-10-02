@@ -85,37 +85,30 @@
 
 /* Kata menyala mengikuti scroll. Jendela 3 kata bergeser dari --a sepanjang --s perjalanan blok langkah. Langkah 1 baru mulai di 46% karena bagian baru menempel di layar pada titik itu; ruang tambahan di ujung runway memberi langkah 3 waktu selesai */
 
-/* Seksi skenario: dua aliran kartu serong (kiri atas dan kanan atas) digerakkan scroll. Jadwal dan jalur tiap kartu ada di components/landing/scenario-tiles.ts */
+/* Seksi skenario: kolom kartu gambar naik dari bawah mengikuti scroll, tiga kolom di kiri dan tiga di kanan judul. Kolom luar lebih panjang sehingga menempuh jarak lebih jauh dan terlihat lebih cepat. Susunan kartu ada di components/landing/scenario-wall.tsx */
 .lp-cosmos { position: relative; timeline-scope: --cs; }
-.lp-cosmos-stage { position: sticky; top: 72px; height: calc(100svh - 72px); overflow: hidden; container-type: size; isolation: isolate; perspective: 1400px; background: #fff; }
-.lp-cosmos-runway { height: 230svh; margin-top: calc(72px - 100svh); view-timeline: --cs block; pointer-events: none; }
-.cs-tiles { position: absolute; inset: 0; }
-.cs-tile { --dir: 1; position: absolute; top: 0; left: 0; width: calc(var(--ww) * var(--ws, 1) * 1cqw); border-radius: 1.3cqw; overflow: hidden; background: var(--lp-sky); box-shadow: 0 16px 32px -16px rgba(12, 31, 77, 0.38); transform-origin: 50% 50%; will-change: transform, opacity; opacity: 0; }
-.cs-tile.cs-r { left: auto; right: 0; --dir: -1; }
-.cs-tile img { display: block; width: 100%; height: auto; user-select: none; }
+.lp-cosmos-stage { position: sticky; top: 72px; height: calc(100svh - 72px); overflow: hidden; container-type: size; isolation: isolate; background: #fff; }
+.lp-cosmos-runway { height: 260svh; margin-top: calc(72px - 100svh); view-timeline: --cs block; pointer-events: none; }
+.cs-cols { position: absolute; inset: 0; }
+.cs-col { --cw: 10.07cqw; --gap: 1cqw; position: absolute; top: 0; display: flex; flex-direction: column; gap: var(--gap); width: var(--cw); translate: 0 100cqh; will-change: translate; }
+.cs-l { left: calc(19.6cqw - var(--k) * 11.97cqw); }
+.cs-r { left: calc(70.33cqw + var(--k) * 11.97cqw); }
+.cs-card { aspect-ratio: 270 / 600; overflow: hidden; border-radius: 1.2cqw; background: #e4e8ee; }
+.cs-card img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; }
 .cs-copy { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 16px; padding: 0 20px; text-align: center; pointer-events: none; }
-.cs-copy h2 { max-width: 14ch; font-size: clamp(36px, 5.4vw, 76px); font-weight: 500; line-height: 1.04; letter-spacing: -0.02em; color: var(--lp-ink); text-wrap: balance; }
-.cs-copy::before { content: ""; position: absolute; inset: 22% -8%; z-index: -1; background: radial-gradient(ellipse closest-side, #fff 60%, rgba(255, 255, 255, 0)); pointer-events: none; }
+.cs-copy h2 { max-width: 14ch; font-size: clamp(34px, 4.1vw, 60px); font-weight: 500; line-height: 1.04; letter-spacing: -0.02em; color: var(--lp-ink); text-wrap: balance; }
 .cs-copy h2 span { color: var(--lp-blue); }
-.cs-copy h2, .cs-copy p { text-shadow: 0 0 18px #fff, 0 0 6px #fff; }
 .cs-copy p { max-width: 30ch; font-size: 18px; line-height: 1.6; color: var(--lp-body); }
-@keyframes cs-fly {
-  0% { opacity: 0; transform: translate3d(calc(var(--dir) * var(--x0) * var(--xs, 1) * 1cqw), calc(var(--y0) * 1cqh), 0) rotate(calc(var(--r0) * 1deg)) rotateY(calc(var(--ry) * 1deg)) scale(0.3); }
-  12% { opacity: 1; }
-  100% { opacity: 1; transform: translate3d(calc(var(--dir) * var(--x1) * var(--xs, 1) * 1cqw), calc(var(--y1) * 1cqh), 0) rotate(calc(var(--r1) * 1deg)) rotateY(calc(var(--ry) * 1deg)) scale(1.05); }
-}
-@keyframes cs-loop {
-  0% { opacity: 0; transform: translate3d(calc(var(--dir) * var(--x0) * var(--xs, 1) * 1cqw), calc(var(--y0) * 1cqh), 0) rotate(calc(var(--r0) * 1deg)) rotateY(calc(var(--ry) * 1deg)) scale(0.3); }
-  3% { opacity: 1; }
-  32% { opacity: 1; transform: translate3d(calc(var(--dir) * var(--x1) * var(--xs, 1) * 1cqw), calc(var(--y1) * 1cqh), 0) rotate(calc(var(--r1) * 1deg)) rotateY(calc(var(--ry) * 1deg)) scale(1.05); }
-  33%, 100% { opacity: 0; transform: translate3d(calc(var(--dir) * var(--x1) * var(--xs, 1) * 1cqw), calc(var(--y1) * 1cqh), 0) scale(1.05); }
+@keyframes cs-rise {
+  from { translate: 0 100cqh; }
+  to { translate: 0 calc(var(--n) * (var(--cw) * 2.2222 + var(--gap)) * -1); }
 }
 @supports (animation-timeline: view()) {
-  .cs-tile { animation: cs-fly linear both; animation-timeline: --cs; animation-range: cover calc(var(--a) * 1%) cover calc(var(--b) * 1%); }
+  .cs-col { animation: cs-rise linear both; animation-timeline: --cs; animation-range: cover 28% cover 72%; }
 }
 @supports not (animation-timeline: view()) {
-  .cs-tile { animation: cs-loop 40s linear infinite; animation-delay: calc(var(--dl) * 1s); }
-  .lp-cosmos-stage[data-off="true"] .cs-tile { animation-play-state: paused; }
+  .cs-col { animation: cs-rise 26s linear infinite; animation-delay: calc(var(--k) * -5s); }
+  .lp-cosmos-stage[data-off="true"] .cs-col { animation-play-state: paused; }
   .lp-cosmos-runway { height: 0; margin-top: 0; }
   .lp-cosmos-stage { position: relative; top: 0; }
 }
@@ -151,16 +144,19 @@
   .hs, .hs-in, .hs-in .hs-blink, .hs-squig path { animation: none !important; transform: none; transition: none; }
   .hs-in .hs-blink { display: none; }
   .hs-squig path { stroke-dashoffset: 0; }
-  .cs-tile { animation: cs-fly 1s linear paused both !important; animation-timeline: auto !important; animation-delay: calc(var(--f) * -1s) !important; }
+  .cs-col { animation: cs-rise 1s linear paused both !important; animation-timeline: auto !important; animation-delay: -0.5s !important; }
   
   
 }
 
 /* Tablet dan ponsel */
 @media (max-width: 860px) {
-  .cs-tile { --ws: 1.85; --xs: 0.3; }
-  .cs-tile:nth-child(3n) { display: none; }
-  .cs-copy h2 { font-size: clamp(36px, 10.4vw, 52px); }
+  .cs-col { --cw: 24cqw; }
+  .cs-l { left: calc(22cqw - var(--k) * 27cqw); }
+  .cs-r { left: calc(54cqw + var(--k) * 27cqw); }
+  .cs-col:nth-child(3n) { display: none; }
+  .cs-copy::before { content: ""; position: absolute; inset: 30% 5%; z-index: -1; border-radius: 28px; background: #fff; }
+  .cs-copy h2 { font-size: clamp(34px, 9.6vw, 48px); }
   .lp-hero-stage { min-height: 740px; }
   .hs-squig { display: none; }
   .hs { left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: calc(var(--ms) * 1px); }

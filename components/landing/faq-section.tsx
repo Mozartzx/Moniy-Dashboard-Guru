@@ -5,12 +5,12 @@ import { useState } from 'react';
 import { Rv } from './rv';
 
 const faqs = [
-  { q: 'Moniy itu untuk siapa?', a: 'Untuk siswa SMA (Fase E) yang ingin belajar ekonomi, keuangan, dan wirausaha lewat cerita. Guru memakai dashboard untuk memantau kelasnya.' },
-  { q: 'Apakah guru bisa melihat siapa yang terpapar judi online?', a: 'Tidak. Guru hanya melihat angka gabungan per kelas. Nama siswa tidak pernah dikaitkan dengan data deteksi judi online.' },
-  { q: 'Bagaimana cara kerja Perisai?', a: 'Saat Perisai aktif, Moniy memblokir situs judi online di ponselmu. Guru hanya melihat angka gabungan satu kelas, bukan siapa yang mencobanya.' },
-  { q: 'Apa itu Moniy AI?', a: 'Fitur yang menyusun modul dari cerita yang kamu ketik. Selain itu ada materi singkat untuk memahami konsep seperti laba kotor.' },
-  { q: 'Apakah siswa perlu login ke dashboard guru?', a: 'Tidak. Dashboard khusus guru. Siswa belajar lewat aplikasi Moniy di ponsel.' },
-  { q: 'Di mana saya bisa mengunduh aplikasinya?', a: 'Tautan unduh akan tersedia pada tombol "Unduh aplikasi" di halaman ini begitu Moniy dirilis.' },
+  { q: 'Moniy itu untuk siapa?', a: 'Untuk siswa SMA kelas X (Fase E) yang mau belajar ekonomi dan wirausaha lewat cerita. Guru memakai dashboard web untuk memantau kelasnya.' },
+  { q: 'Apakah guru bisa melihat siapa yang terpapar judi online?', a: 'Tidak. Guru hanya melihat angka satu kelas secara keseluruhan. Datanya memang tidak pernah menyimpan nama siswa.' },
+  { q: 'Bagaimana cara kerja Perisai?', a: 'Nyalakan Perisai di aplikasi, dan situs judi online yang kamu buka akan diblokir. Moniy hanya mencatat bahwa ada percobaan, bukan siapa pelakunya.' },
+  { q: 'Apa itu Moniy AI?', a: 'Fitur yang mengubah ceritamu jadi modul. Kamu ketik idenya, misalnya buka warung kopi di sekolah, lalu Moniy AI menyusun pilihan dan kejadiannya.' },
+  { q: 'Apakah siswa perlu login ke dashboard guru?', a: 'Tidak. Dashboard hanya untuk guru. Siswa belajar lewat aplikasi Moniy di ponsel.' },
+  { q: 'Di mana saya bisa mengunduh aplikasinya?', a: 'Belum dirilis. Begitu ada, tombol "Unduh aplikasi" di halaman ini langsung mengarah ke sana.' },
 ];
 
 export function FaqSection() {
@@ -20,7 +20,7 @@ export function FaqSection() {
     <section className="nx-sec nx-band" id="faq" aria-labelledby="nx-faq-title">
       <div className="lp-wrap">
         <Rv className="nx-head">
-          <h2 className="nx-h2" id="nx-faq-title">Ada pertanyaan? <em>Ini jawabannya.</em></h2>
+          <h2 className="nx-h2" id="nx-faq-title">FAQ</h2>
         </Rv>
         <Rv className="nx-faq" delay={100}>
           {faqs.map((item, i) => (

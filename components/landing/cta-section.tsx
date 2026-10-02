@@ -18,8 +18,8 @@ export function CtaSection() {
       <div className="nx-cta-stage">
         {deco.map((d) => <Image key={d.id} className={`nx-cta-i ${d.cls}`} src={`/landing/hero/${d.id}.webp`} alt="" width={d.w} height={d.h} unoptimized aria-hidden="true" />)}
         <Rv className="nx-cta-copy">
-          <h2 className="nx-h2" id="nx-cta-title">Siap menentukan <em>ceritamu sendiri</em>?</h2>
-          <p className="nx-lede">Unduh Moniy dan mulai dari cerita pertama. Guru bisa langsung membuka dashboard kelas.</p>
+          <h2 className="nx-h2" id="nx-cta-title">Usahamu menunggu <em>keputusan pertamamu</em>.</h2>
+          <p className="nx-lede">Unduh Moniy dan mainkan satu cerita. Guru bisa langsung masuk ke dashboard kelas.</p>
           <div className="nx-btn-row">
             <a className="lp-btn lp-btn-primary" href={APP_DOWNLOAD_URL}>Unduh aplikasi</a>
             <BrowserNavigationLink className="lp-btn lp-btn-secondary" href="/login">Masuk sebagai guru</BrowserNavigationLink>

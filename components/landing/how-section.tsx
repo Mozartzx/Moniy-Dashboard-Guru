@@ -1,62 +1,70 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { PhoneFrame, phoneScreens } from './phone-frame';
-import { Rv } from './rv';
-
-const STEP_MS = 5200;
 
 const steps = [
-  { title: 'Pilih cerita', text: 'Mulai dari modul bawaan seperti Berjualan Jus Segar, atau ketik cerita yang kamu mau dan biarkan Moniy AI menyusunnya.', screen: phoneScreens.pilih },
-  { title: 'Ambil keputusan', text: 'Pilih salah satu opsi, atau tulis sendiri apa yang akan kamu lakukan. Keputusanmu dinilai dan menggerakkan ceritanya.', screen: phoneScreens.event },
-  { title: 'Hadapi random event', text: 'Di tengah cerita muncul kejadian tak terduga. Saldo dan hasil usahamu ikut berubah sesuai keputusanmu.', screen: phoneScreens.hasil },
-  { title: 'Dapat julukan, lalu terus belajar', text: 'Tiap cerita berakhir dengan julukan dan pencapaian. Lanjutkan dengan materi singkat dan jaga streak mingguanmu.', screen: phoneScreens.ending },
+  { title: 'Pilih cerita', text: 'Pilih modul seperti Berjualan Jus Segar, atau ketik ceritamu sendiri dan biarkan Moniy AI yang menyusunnya.', screen: phoneScreens.pilih },
+  { title: 'Ambil keputusan', text: 'Pilih salah satu opsi, atau tulis langkahmu sendiri. Apa pun yang kamu putuskan, ceritanya ikut belok.', screen: phoneScreens.event },
+  { title: 'Hadapi random event', text: 'Tiba-tiba listrik padam. Cara kamu menanganinya menentukan saldo dan hasil usahamu.', screen: phoneScreens.hasil },
+  { title: 'Dapat julukan', text: 'Tiap cerita ditutup dengan julukan, misalnya Kancil Cerdik. Lanjut ke materi singkat dan jaga streak mingguanmu.', screen: phoneScreens.ending },
 ];
 
+/** Bagian yang menempel di layar: langkah aktif mengikuti scroll, kata-katanya menyala lewat CSS scroll timeline (lihat landing-next.css). */
 export function HowSection() {
   const [active, setActive] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [hold, setHold] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const runway = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const observer = new IntersectionObserver(([entry]) => setRunning(entry.isIntersecting && !reduce), { threshold: 0.4 });
-    observer.observe(el);
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.i));
+      }
+    }, { rootMargin: '-50% 0px -50% 0px' });
+    for (const el of runway.current) if (el) observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const next = useCallback(() => setActive((current) => (current + 1) % steps.length), []);
-  const playing = running && !hold;
+  const goTo = (index: number) => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    runway.current[index]?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  };
 
   return (
-    <section className="nx-sec nx-band" id="cara-kerja" aria-labelledby="nx-how-title">
-      <div className="lp-wrap">
-        <Rv className="nx-head">
-          <p className="nx-eyebrow">Cara kerja</p>
-          <h2 className="nx-h2" id="nx-how-title">Empat langkah dari <em>bingung</em> jadi <em>paham</em>.</h2>
-        </Rv>
-        <Rv className="nx-how" delay={120}>
-          <div className="nx-how-grid" ref={ref}>
-            <div className="nx-steps" role="tablist" aria-label="Langkah belajar di Moniy" onPointerEnter={() => setHold(true)} onPointerLeave={() => setHold(false)} onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
+    <section className="nx-sec nx-band nx-sc" id="cara-kerja" aria-labelledby="nx-how-title">
+      <div className="nx-sc-stage">
+        <div className="lp-wrap nx-sc-inner">
+          <div className="nx-head">
+            <p className="nx-eyebrow">Cara kerja</p>
+            <h2 className="nx-h2" id="nx-how-title">Cukup mainkan, pilih aksi <em>sekreatif mungkin</em>.</h2>
+          </div>
+          <div className="nx-sc-panel">
+            <ol className="nx-rail" aria-label="Langkah cerita">
               {steps.map((step, i) => (
-                <button key={step.title} type="button" role="tab" id={`nx-tab-${i}`} aria-selected={i === active} aria-controls="nx-how-panel" tabIndex={i === active ? 0 : -1} className="nx-step" data-active={i === active} onClick={() => setActive(i)}>
-                  <span className="nx-step-n" aria-hidden="true">{i + 1}</span>
-                  <span className="nx-step-body">
-                    <span className="nx-step-title">{step.title}</span>
-                    <span className="nx-step-text"><span>{step.text}</span></span>
-                  </span>
-                  {i === active ? <span className="nx-step-bar" aria-hidden="true"><i key={active} data-run={playing} style={{ animationDuration: `${STEP_MS}ms` }} onAnimationEnd={playing ? next : undefined} /></span> : null}
-                </button>
+                <li key={step.title}>
+                  <button type="button" aria-current={i === active ? 'step' : undefined} onClick={() => goTo(i)}>
+                    <span className="nx-rail-n" aria-hidden="true">{i + 1}</span>
+                    <span className="nx-rail-l">{step.title}</span>
+                  </button>
+                </li>
               ))}
-            </div>
-            <div className="nx-how-phone" id="nx-how-panel" role="tabpanel" aria-labelledby={`nx-tab-${active}`}>
-              <PhoneFrame screens={steps.map((step) => step.screen)} index={active} />
+            </ol>
+            <div className="nx-sc-phone"><PhoneFrame screens={steps.map((step) => step.screen)} index={active} /></div>
+            <div className="nx-sc-copywrap">
+              {steps.map((step, i) => {
+                const words = step.text.split(' ');
+                return (
+                  <p key={step.title} className="nx-sc-copy" data-active={i === active}>
+                    {words.map((word, k) => <span key={k} className="nx-w" style={{ '--i': k, '--n': words.length } as CSSProperties}>{word}{' '}</span>)}
+                  </p>
+                );
+              })}
             </div>
           </div>
-        </Rv>
+        </div>
+      </div>
+      <div className="nx-sc-runway" aria-hidden="true">
+        {steps.map((step, i) => <div key={step.title} data-i={i} ref={(el) => { runway.current[i] = el; }} />)}
       </div>
     </section>
   );
