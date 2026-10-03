@@ -337,7 +337,7 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .community-card { display: flex; flex-direction: column; padding: 17px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
 .community-card-head { display: flex; align-items: center; gap: 9px; }
 .community-card-head > div { min-width: 0; flex: 1; }
-.community-card-head strong, .community-card-head span { display: block; }
+.community-card-head strong, .community-card-head > div span { display: block; }
 .community-card-head strong { font-size: var(--text-sm); }
 .community-card-head div span { margin-top: 2px; color: var(--muted); font-size: var(--text-xs); }
 .business-visual { min-height: 108px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 7px; margin: 15px 0; border-radius: 14px; color: #1a64bb; background: linear-gradient(145deg, #e3f3ff, #f4fbff); }
