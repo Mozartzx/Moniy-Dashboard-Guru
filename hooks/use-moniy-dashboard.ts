@@ -1,13 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getActiveClassId, setActiveClassId } from '@/lib/moniy/active-class';
 import { teacherDashboardRepository } from '@/lib/moniy/repository';
 import { periodOptions } from '@/lib/moniy/period';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
 
 export function useMoniyDashboard(classIds: string[]) {
-  const [selectedClassId, setClassId] = useState('');
-  const classId = selectedClassId || classIds[0] || '';
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const classId = classIds.includes(selectedClassId) ? selectedClassId : classIds[0] || '';
+  const setClassId = useCallback((id: string) => {
+    setActiveClassId(id);
+    setSelectedClassId(id);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSelectedClassId(getActiveClassId()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [period, setPeriod] = useState(periodOptions[0].value);
   const [snapshot, setSnapshot] = useState<ClassroomSnapshot | null>(null);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');

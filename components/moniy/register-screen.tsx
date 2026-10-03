@@ -70,7 +70,7 @@ export function RegisterScreen() {
       return;
     }
     await supabase.from('users').insert({ name, email, role: 'teacher', school_name: schoolName });
-    window.location.assign('/dashboard/ringkasan');
+    window.location.assign('/kelas');
   };
 
   const signUpWithGoogle = async () => {

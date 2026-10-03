@@ -29,7 +29,7 @@ export default function OnboardingSekolahPage() {
       setError('Gagal menyimpan, coba lagi.');
       return;
     }
-    window.location.assign('/onboarding/kelas');
+    window.location.assign('/kelas');
   };
 
   return (

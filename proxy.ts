@@ -1,12 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { resolveTeacherStage, type TeacherStage } from '@/lib/moniy/teacher';
-
-const STAGE_PATH: Record<Exclude<TeacherStage, 'role-conflict'>, string> = {
-  'onboarding-sekolah': '/onboarding/sekolah',
-  'onboarding-kelas': '/onboarding/kelas',
-  dashboard: '/dashboard/ringkasan',
-};
+import { CLASS_LIST_PATH, resolveTeacherStage } from '@/lib/moniy/teacher';
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -27,7 +21,7 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   if (!user) {
-    if (path.startsWith('/dashboard') || path.startsWith('/onboarding')) {
+    if (path.startsWith('/dashboard') || path.startsWith('/onboarding') || path === CLASS_LIST_PATH) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
     return response;
@@ -39,29 +33,32 @@ export async function proxy(request: NextRequest) {
     .eq('email', user.email!)
     .maybeSingle();
 
-  const { count } = await supabase.from('classes').select('id', { count: 'exact', head: true });
-  const stage = resolveTeacherStage(row, count ?? 0);
+  const stage = resolveTeacherStage(row);
 
   if (stage === 'role-conflict') {
     await supabase.auth.signOut();
     return NextResponse.redirect(new URL('/login?error=role-conflict', request.url));
   }
 
-  const target = STAGE_PATH[stage];
+  if (stage === 'onboarding-sekolah') {
+    // Profile incomplete: only the school step is reachable.
+    return path === '/onboarding/sekolah' ? response : NextResponse.redirect(new URL('/onboarding/sekolah', request.url));
+  }
 
-  if (stage === 'dashboard') {
-    // Fully onboarded: any /dashboard/* page is allowed, but auth/onboarding pages are not.
-    if (path === '/login' || path === '/register' || path.startsWith('/onboarding')) {
-      return NextResponse.redirect(new URL(target, request.url));
-    }
-  } else if (path !== target) {
-    // Still onboarding: only this stage's own page is allowed.
-    return NextResponse.redirect(new URL(target, request.url));
+  // Ready: the class list is home. Auth and onboarding pages send the teacher back to it.
+  if (path === '/login' || path === '/register' || path.startsWith('/onboarding')) {
+    return NextResponse.redirect(new URL(CLASS_LIST_PATH, request.url));
+  }
+
+  // A dashboard always belongs to a class; with none yet, go create one from the list.
+  if (path.startsWith('/dashboard')) {
+    const { count } = await supabase.from('classes').select('id', { count: 'exact', head: true });
+    if (!count) return NextResponse.redirect(new URL(CLASS_LIST_PATH, request.url));
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/onboarding/:path*', '/kelas', '/login', '/register'],
 };

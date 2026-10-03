@@ -57,7 +57,7 @@ export function LoginScreen() {
       setError('Email atau kata sandi salah.');
       return;
     }
-    window.location.assign('/dashboard/ringkasan');
+    window.location.assign('/kelas');
   };
 
   const signInWithGoogle = async () => {

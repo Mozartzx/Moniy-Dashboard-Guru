@@ -31,6 +31,39 @@ export async function getMyClasses(): Promise<TeacherClass[]> {
   }));
 }
 
+export type ClassSummary = TeacherClass & { studentCount: number };
+
+export async function getMyClassSummaries(): Promise<ClassSummary[]> {
+  const classes = await getMyClasses();
+  if (classes.length === 0) return [];
+  const { data } = await createClient()
+    .from('users')
+    .select('class_id')
+    .eq('role', 'student')
+    .in('class_id', classes.map((item) => item.id));
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) if (row.class_id) counts.set(row.class_id, (counts.get(row.class_id) ?? 0) + 1);
+  return classes.map((item) => ({ ...item, studentCount: counts.get(item.id) ?? 0 }));
+}
+
+function generateClassCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i += 1) code += chars[Math.floor(Math.random() * chars.length)];
+  return `MONIY-${code}`;
+}
+
+export async function createClass(teacher: TeacherProfile, fields: { name: string; academicYear: string | null }) {
+  const { error } = await createClient().from('classes').insert({
+    id: generateClassCode(),
+    name: fields.name,
+    school_name: teacher.schoolName,
+    teacher_id: teacher.id,
+    academic_year: fields.academicYear,
+  });
+  if (error) throw error;
+}
+
 export async function updateTeacherProfile(id: number, fields: { name: string; nickname: string | null; phone: string | null; schoolName: string | null }) {
   const { error } = await createClient()
     .from('users')

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Bell,
   BookOpenCheck,
+  ArrowLeftRight,
   ChevronDown,
   CircleUserRound,
   GraduationCap,
@@ -82,10 +83,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="sidebar-class-card">
+        <BrowserNavigationLink href="/kelas" className="sidebar-class-card" aria-label={`Kelas aktif ${className}. Ganti kelas`}>
           <span><School size={18} /></span>
-          <div><small>Kelas aktif</small><strong>{className}</strong><p>{dashboard.snapshot?.studentCount ?? 0} siswa</p></div>
-        </div>
+          <div>
+            <small>Kelas aktif</small><strong>{className}</strong><p>{dashboard.snapshot?.studentCount ?? 0} siswa</p>
+            <em className="sidebar-class-swap"><ArrowLeftRight size={14} /> Ganti kelas</em>
+          </div>
+        </BrowserNavigationLink>
       </aside>
       {mobileNavOpen ? <button className="mobile-scrim" aria-label="Tutup navigasi" onClick={() => setMobileNavOpen(false)} /> : null}
 
@@ -93,7 +97,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <header className="dashboard-topbar">
           <div className="topbar-title">
             <button className="mobile-menu" onClick={() => setMobileNavOpen(true)} aria-label="Buka menu"><Menu size={22} /></button>
-            <div><small>Dashboard Guru / {currentRoute.title}</small><strong>{currentRoute.title}</strong></div>
+            <div>
+              <small className="crumbs"><BrowserNavigationLink href="/kelas">Daftar kelas</BrowserNavigationLink> / {className || '...'} / {currentRoute.title}</small>
+              <strong>{currentRoute.title}</strong>
+            </div>
           </div>
           <div className="topbar-controls">
             <FilterSelect label="Kelas" icon={School} value={dashboard.classId} options={classOptions} onValueChange={dashboard.setClassId} />

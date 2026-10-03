@@ -506,3 +506,32 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Daftar kelas (/kelas): halaman pertama setelah login */
+.class-teacher { display: inline-flex; align-items: center; gap: 10px; }
+.class-teacher > span:last-child { display: grid; line-height: 1.2; }
+.class-teacher small { color: #6b7c8d; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; }
+.class-grid > li { animation: class-rise 380ms cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.class-card { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; height: 100%; padding: 22px; border: 2px solid var(--border); border-radius: var(--radius); background: #fff; color: inherit; text-decoration: none; transition: border-color 160ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1); }
+.class-card:active { transform: scale(0.985); }
+.class-card:focus-visible { outline: 3px solid var(--blue-strong); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .class-card:hover { border-color: var(--blue-strong); } }
+.class-card-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: var(--blue-strong); color: #fff; }
+.class-card h2 { margin: 0; font-size: 21px; line-height: 1.2; }
+.class-card-meta { margin: 0; color: #6b7c8d; font-size: 14px; }
+.class-card-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.class-chip { padding: 4px 10px; border-radius: 999px; background: #5b6b85; color: #fff; font-size: 13px; font-weight: 600; }
+.class-card-open { display: inline-flex; align-items: center; gap: 6px; color: var(--blue-strong); font-weight: 600; }
+.class-skeleton { min-height: 220px; border-radius: var(--radius); }
+@keyframes class-rise { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .class-grid > li { animation: none; } }
+
+/* Kartu kelas aktif di sidebar: sekaligus jalan kembali ke daftar kelas */
+a.sidebar-class-card { color: inherit; text-decoration: none; transition: border-color 160ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1); }
+a.sidebar-class-card:active { transform: scale(0.985); }
+a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { a.sidebar-class-card:hover { border-color: var(--blue-strong); } }
+.sidebar-class-swap { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; color: var(--blue-strong); font-size: 13px; font-style: normal; font-weight: 600; }
+.crumbs a { color: var(--blue-strong); font-weight: 600; text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .crumbs a:hover { text-decoration: underline; } }

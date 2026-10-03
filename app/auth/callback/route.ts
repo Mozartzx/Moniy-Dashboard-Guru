@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { resolveTeacherStage } from '@/lib/moniy/teacher';
+import { CLASS_LIST_PATH, resolveTeacherStage } from '@/lib/moniy/teacher';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -36,11 +36,6 @@ export async function GET(request: Request) {
     row = created ?? null;
   }
 
-  const { count } = await supabase
-    .from('classes')
-    .select('id', { count: 'exact', head: true });
-
-  const stage = resolveTeacherStage(row, count ?? 0);
-  const destination = stage === 'dashboard' ? '/dashboard/ringkasan' : `/${stage.replace('-', '/')}`;
+  const destination = resolveTeacherStage(row) === 'ready' ? CLASS_LIST_PATH : '/onboarding/sekolah';
   return NextResponse.redirect(`${origin}${destination}`);
 }
