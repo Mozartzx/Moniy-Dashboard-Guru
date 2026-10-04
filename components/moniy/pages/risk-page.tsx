@@ -15,7 +15,7 @@ export function RiskPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
     <div className="page-stack">
       <section className="risk-hero">
         <div className="risk-hero-visual">
-          <Image className="risk-hero-image" src={isImproving ? '/assets/moniy-risk-safe.png' : '/assets/moniy-risk-alert.png'} alt="Maskot MONIY mendampingi keamanan finansial digital" fill sizes="(max-width: 900px) 100vw, 52vw" priority />
+          <Image className="risk-hero-image" src="/assets/banner-peringatan-judol.webp" alt="Maskot MONIY mendampingi keamanan finansial digital" fill sizes="(max-width: 900px) 100vw, 52vw" priority />
         </div>
         <div className="risk-hero-copy">
           <span className="page-kicker">Agregat anonim</span><h1>Peringatan judi online</h1><p>Sinyal preventif tingkat kelas untuk membantu pembinaan kolektif bersama guru BK.</p>

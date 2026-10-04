@@ -7,7 +7,7 @@
   --green: #36a762; --red: #e35563;
   --text-xs: 12px; --text-sm: 13px; --text-base: 14px; --text-md: 16px; --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
   --tone-blue: #2f7cf6; --tone-cyan: #0ea5c9; --tone-orange: #f28c18; --tone-green: #2ea36a; --danger: #d92d3a;
-  --radius: 18px; --shadow: 0 8px 24px rgba(28, 88, 154, .09); color-scheme: light;
+  --radius: 18px; --shadow: none; color-scheme: light;
 }
 /* -3% per elemen (em dihitung dari ukuran huruf masing-masing); judul dan label Fredoka kembali ke 0 di aturan font di bawah */
 * { box-sizing: border-box; letter-spacing: -0.03em; }
@@ -21,7 +21,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 button:disabled { cursor: not-allowed; opacity: .58; }
 
 .login-shell { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(500px, .92fr); background: #fff; }
-.login-visual { position: relative; min-height: 100dvh; overflow: hidden; background: #dfe9ff url('/assets/moniy-login-landscape.png') 68% bottom / auto 100% no-repeat; }
+.login-visual { position: relative; min-height: 100dvh; overflow: hidden; background: #dfe9ff url('/assets/moniy-laptop-taman-expanded-polished-3072x1772.webp') 68% bottom / auto 100% no-repeat; }
 .login-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9, 44, 107, .03), transparent 55%, rgba(8, 44, 112, .12)); pointer-events: none; }
 .login-visual-content { position: relative; z-index: 1; width: min(620px, 84%); margin: 8.5vh auto 0; }
 .login-kicker, .page-kicker { display: inline-flex; align-items: center; margin: 0 0 10px; color: var(--blue-strong); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -147,16 +147,15 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .dashboard-main { width: min(1420px, 100%); margin: 0 auto; padding: 20px 26px 50px; }
 .page-stack { display: grid; gap: 18px; animation: page-in .34s ease both; }
 @keyframes page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.welcome-panel { min-height: 192px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 28px 33px; border: 1px solid #96cef4; border-radius: 22px; color: #fff; background: linear-gradient(115deg, #1263d7 0%, #2589ec 57%, #68d6f2 100%); box-shadow: 0 6px 0 #0b53b6; }
-.welcome-panel::before { content: ''; position: absolute; width: 360px; height: 360px; top: -175px; right: 80px; border-radius: 50%; background: rgba(255, 255, 255, .10); }
+.welcome-panel { min-height: 192px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 28px 33px; border: 1px solid #96cef4; border-radius: 22px; color: var(--navy); background: url('/assets/banner-sambutan-dashboard-guru.webp') right center / cover no-repeat; }
+.welcome-panel::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, .92) 38%, rgba(255, 255, 255, 0) 72%); }
 .welcome-copy { position: relative; z-index: 2; max-width: 680px; }
-.welcome-copy .page-kicker { color: #dff7ff; }
+.welcome-copy .page-kicker { color: var(--navy); }
 .welcome-copy h1 { margin: 0; font-size: clamp(25px, 2.5vw, 36px); letter-spacing: -.035em; }
-.welcome-copy p { max-width: 610px; margin: 9px 0 17px; color: rgba(255, 255, 255, .89); font-size: var(--text-md); line-height: 1.55; }
-.welcome-copy p strong { color: #fff; }
-.welcome-action { min-height: 42px; padding: 0 15px; border: 2px solid rgba(255, 255, 255, .62); color: #0d55b7; background: #fff; box-shadow: 0 3px 0 rgba(7, 64, 139, .45); font-size: var(--text-base); }
-.welcome-action:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(7, 64, 139, .45); }
-.welcome-mascot { position: absolute; right: 33px; bottom: -22px; width: 206px; height: 206px; object-fit: contain; filter: drop-shadow(0 12px 22px rgba(6, 58, 132, .25)); }
+.welcome-copy p { max-width: 610px; margin: 9px 0 17px; color: var(--navy); font-size: var(--text-md); line-height: 1.55; }
+.welcome-copy p strong { color: var(--navy); }
+.welcome-action { min-height: 42px; padding: 0 15px; border: 1px solid var(--navy); color: #fff; background: var(--navy); box-shadow: none; font-size: var(--text-base); }
+.welcome-action:active { transform: translateY(2px); }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .metric-card { min-height: 117px; display: flex; align-items: flex-start; gap: 13px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
 .metric-icon, .card-icon, .solid-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 13px; color: #fff; line-height: 0; }
@@ -476,7 +475,6 @@ button:disabled { cursor: not-allowed; opacity: .58; }
   .welcome-copy { max-width: 100%; }
   .welcome-copy h1 { font-size: var(--text-2xl); }
   .welcome-copy p { max-width: 82%; font-size: var(--text-base); }
-  .welcome-mascot { right: -12px; bottom: -24px; width: 150px; height: 150px; opacity: .92; }
   .metric-grid, .lower-overview-grid, .progress-detail-grid, .community-grid, .report-context, .skeleton-row, .skeleton-content { grid-template-columns: 1fr; }
   .metric-card { min-height: 104px; }
   .surface-card { padding: 17px; }

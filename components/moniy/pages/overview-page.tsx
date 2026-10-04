@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -37,7 +36,6 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
           <p><strong>{snapshot.className}</strong> sedang bertumbuh. Ada {snapshot.supportCount} siswa yang mungkin membutuhkan penguatan belajar.</p>
           <BrowserNavigationLink className="welcome-action" href="/dashboard/progres-belajar">Lihat progres kelas <ArrowRight size={18} /></BrowserNavigationLink>
         </div>
-        <Image className="welcome-mascot" src="/assets/moniy-mascot-face.png" alt="Maskot MONIY" width={220} height={220} priority />
       </section>
 
       <section className="metric-grid" aria-label="Metrik kelas">
