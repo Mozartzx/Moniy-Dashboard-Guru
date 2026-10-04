@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, LockKeyhole } from 'lucide-react';
 import { type SyntheticEvent, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
         <div className="login-form-wrap">
           <Image className="login-logo" src="/assets/moniy-logo.png" alt="Moniy" width={260} height={75} priority />
           <div className="login-copy">
-            <span className="mock-badge"><ShieldCheck size={16} /> Dashboard guru</span>
+            <span className="mock-badge">Dashboard Guru</span>
             <h2>Kata sandi baru</h2>
             <p>Minimal 6 karakter.</p>
           </div>

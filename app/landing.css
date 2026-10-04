@@ -50,12 +50,12 @@
 .lp-hero-stage { --px: 0; --py: 0; position: relative; overflow: hidden; display: grid; place-items: center; min-height: clamp(540px, 72dvh, 700px); container-type: inline-size; isolation: isolate; }
 .hs-blob { position: absolute; aspect-ratio: 1; border-radius: 50%; background: #f3f1e9; z-index: 0; }
 .hs-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.hs { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--s) * 0.06944cqw); transform: translate(calc(var(--px) * var(--d) * 1px), calc(var(--py) * var(--d) * 1px)); transition: transform 380ms var(--lp-ease); animation: hs-pop 560ms var(--lp-ease) both; animation-delay: calc(var(--n) * 35ms + 120ms); }
+.hs { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--s) * 0.06944cqw * .8); transform: translate(calc(var(--px) * var(--d) * 1px), calc(var(--py) * var(--d) * 1px)); transition: transform 380ms var(--lp-ease); animation: hs-pop 560ms var(--lp-ease) both; animation-delay: calc(var(--n) * 35ms + 120ms); }
 .hs-big { z-index: 2; }
 .hs-in { position: relative; transform-origin: 50% 92%; animation: var(--anim) var(--dur) ease-in-out var(--delay) infinite; will-change: transform; }
 .hs-in img { display: block; width: 100%; height: auto; user-select: none; }
 .hs-in .hs-blink { position: absolute; height: auto; opacity: 0; animation: hs-blink var(--bt) linear var(--bd) infinite; }
-.hs-squig { position: absolute; left: 12%; top: 5%; width: calc(110px * 0.06944cqw * 14.4 / 1.1); max-width: 150px; }
+.hs-squig { position: absolute; left: 12%; top: 5%; width: calc(110px * 0.06944cqw * 14.4 / 1.1 * .8); max-width: 150px; }
 .hs-squig path { stroke: #12c07a; stroke-width: 7; stroke-linecap: round; fill: none; stroke-dasharray: 160; stroke-dashoffset: 160; animation: hs-draw 5.5s ease-in-out infinite; }
 .lp-hero-copy { position: relative; z-index: 3; display: grid; justify-items: center; gap: 16px; text-align: center; padding: 40px 20px; max-width: 620px; }
 .lp-hero-copy h1 { max-width: 15ch; font-size: clamp(34px, 4.2vw, 58px); font-weight: 500; line-height: 1.06; letter-spacing: -0.02em; color: var(--lp-ink); text-wrap: balance; }
@@ -159,7 +159,7 @@
   .cs-copy h2 { font-size: clamp(34px, 9.6vw, 48px); }
   .lp-hero-stage { min-height: 740px; }
   .hs-squig { display: none; }
-  .hs { left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: calc(var(--ms) * 1px); }
+  .hs { left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: calc(var(--ms) * 1px * .8); }
   .hs-nm { display: none; }
   .lp-hero-copy { padding: 0 20px; }
   .lp-hero-copy h1 { font-size: clamp(32px, 8.4vw, 42px); }

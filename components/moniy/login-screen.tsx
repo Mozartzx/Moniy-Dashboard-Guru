@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { type FocusEvent, type SyntheticEvent, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { GoogleGlyph } from './google-glyph';
@@ -104,7 +104,7 @@ export function LoginScreen() {
             priority
           />
           <div className="login-copy">
-            <span className="mock-badge"><ShieldCheck size={16} /> Dashboard guru</span>
+            <span className="mock-badge">Dashboard Guru</span>
             <h2>Selamat datang, Guru!</h2>
             <p>Masuk untuk melihat kondisi belajar kelas dalam satu tempat.</p>
           </div>

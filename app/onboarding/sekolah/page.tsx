@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Building2, ShieldCheck } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { type SyntheticEvent, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -46,7 +46,7 @@ export default function OnboardingSekolahPage() {
         <div className="login-form-wrap">
           <Image className="login-logo" src="/assets/moniy-logo.png" alt="Moniy" width={260} height={75} priority />
           <div className="login-copy">
-            <span className="mock-badge"><ShieldCheck size={16} /> Dashboard guru</span>
+            <span className="mock-badge">Dashboard Guru</span>
             <h2>Nama sekolah Anda?</h2>
             <p>Ditampilkan pada laporan dan profil guru.</p>
           </div>

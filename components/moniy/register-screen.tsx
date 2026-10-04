@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Building2, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck, User } from 'lucide-react';
+import { Building2, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, MailCheck, User } from 'lucide-react';
 import { type FocusEvent, type SyntheticEvent, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { GoogleGlyph } from './google-glyph';
@@ -121,7 +121,7 @@ export function RegisterScreen() {
           ) : (
             <>
               <div className="login-copy">
-                <span className="mock-badge"><ShieldCheck size={16} /> Dashboard guru</span>
+                <span className="mock-badge">Dashboard Guru</span>
                 <h2>Buat akun guru</h2>
                 <p>Isi data singkat berikut, kelas bisa dibuat setelah akun aktif.</p>
               </div>

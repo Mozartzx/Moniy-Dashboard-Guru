@@ -20,19 +20,19 @@ button { color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(23, 104, 229, .23); outline-offset: 2px; }
 button:disabled { cursor: not-allowed; opacity: .58; }
 
-.login-shell { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(500px, .92fr); background: #fff; }
+.login-shell { --login-top: clamp(48px, 12vh, 120px); min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(500px, .92fr); background: #fff; }
 .login-visual { position: relative; min-height: 100dvh; overflow: hidden; background: #dfe9ff url('/assets/moniy-laptop-taman-expanded-polished-3072x1772.webp') 68% bottom / auto 100% no-repeat; }
 .login-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9, 44, 107, .03), transparent 55%, rgba(8, 44, 112, .12)); pointer-events: none; }
-.login-visual-content { position: relative; z-index: 1; width: min(620px, 84%); margin: 8.5vh auto 0; }
+.login-visual-content { position: relative; z-index: 1; width: min(620px, 84%); margin: var(--login-top) auto 0; }
 .login-kicker, .page-kicker { display: inline-flex; align-items: center; margin: 0 0 10px; color: var(--blue-strong); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .login-visual h1 { max-width: 590px; margin: 0; color: var(--navy); font-size: clamp(38px, 4.1vw, 64px); line-height: 1.03; letter-spacing: -.045em; }
 .login-visual-content > p:last-child { max-width: 530px; margin: 20px 0 0; color: #536b85; font-size: 17px; line-height: 1.7; }
-.login-panel { min-height: 100dvh; display: grid; place-items: center; padding: 48px clamp(32px, 5vw, 84px); background: #fff; }
+.login-panel { min-height: 100dvh; display: grid; place-items: start center; padding: var(--login-top) clamp(32px, 5vw, 84px) 48px; background: #fff; }
 .login-form-wrap { width: min(460px, 100%); }
 .login-logo { display: block; width: 206px; height: auto; object-fit: contain; object-position: left center; }
 .login-copy { margin: 30px 0 28px; }
 .mock-badge, .ai-label { display: inline-flex; align-items: center; gap: 6px; width: max-content; border-radius: 999px; font-weight: 750; }
-.mock-badge { margin-bottom: 17px; padding: 7px 10px; color: #fff; background: #23834b; font-size: 12px; }
+.mock-badge { margin-bottom: 12px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .confirmation-panel { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; margin-top: 12px; }
 .confirmation-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; color: #fff; background: var(--blue); }
 .confirmation-panel h2 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
