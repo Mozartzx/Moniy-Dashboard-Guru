@@ -79,7 +79,12 @@ function ScenarioEditor({ questId, step, locked, onSaved, notify }: {
   const [draft, setDraft] = useState<Step>(step);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  useEffect(() => setDraft(step), [step]);
+  // Muat ulang isian saat data dari server berganti (setelah simpan/terapkan usulan AI).
+  const [seen, setSeen] = useState(step);
+  if (seen !== step) {
+    setSeen(step);
+    setDraft(step);
+  }
 
   const setChoice = (i: number, patch: Partial<Choice>) =>
     setDraft({ ...draft, choices: draft.choices.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) });
@@ -269,7 +274,10 @@ function QuestEditor({ id, classOptions, notify, onBack }: { id: number; classOp
   const reload = useCallback(async () => {
     try { setQuest(await questApi.get(id)); } catch (e) { setError(errText(e)); }
   }, [id]);
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void reload(), 0);
+    return () => window.clearTimeout(timer);
+  }, [reload]);
 
   if (error) return <div className="page-stack"><button className="secondary-button" onClick={onBack}><ArrowLeft size={16} /> Kembali</button><p className="field-error">{error}</p></div>;
   if (!quest) return <div className="page-stack"><p className="field-hint"><Loader2 size={16} className="module-spin" /> Memuat Quest...</p></div>;
@@ -366,10 +374,10 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
         <div className="section-heading-row"><div><h2>Quest saya</h2><p>Draft dan Quest yang sudah dikirim ke kelas.</p></div></div>
         {list === null ? <p className="field-hint"><Loader2 size={16} className="module-spin" /> Memuat...</p> : list.length ? (
           <table className="data-table">
-            <thead><tr><th>Judul</th><th>Topik</th><th>Status</th><th>Kelas</th><th /></tr></thead>
+            <thead><tr><th>Judul</th><th>Topik</th><th>Status</th><th>Kelas</th><th aria-label="Aksi" /></tr></thead>
             <tbody>{list.map((q) => (
               <tr key={q.id}>
-                <td><button className="link-button" type="button" onClick={() => setOpenId(q.id)}><strong>{q.title}</strong></button></td>
+                <td><button className="link-button" type="button" onClick={() => setOpenId(q.id)}>{q.title}</button></td>
                 <td>{q.topic ?? '-'}</td>
                 <td><span className={`status-chip ${q.status === 'published' ? 'status-done' : ''}`}>{q.status === 'published' ? 'Terkirim' : 'Draft'}</span></td>
                 <td>{q.classIds.length}</td>

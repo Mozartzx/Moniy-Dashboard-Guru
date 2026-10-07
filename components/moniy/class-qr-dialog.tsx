@@ -71,7 +71,8 @@ export function ClassQrDialog({ open, onOpenChange, code, name }: {
         <DialogTitle>QR kelas {name}</DialogTitle>
         <DialogDescription>Siswa membuka Moniy, pilih Gabung kelas, lalu pindai QR ini atau pilih fotonya dari galeri.</DialogDescription>
         <div className="class-qr">
-          <svg viewBox={`0 0 ${viewSize} ${viewSize}`} role="img" aria-label={`QR kode kelas ${code}`} shapeRendering="crispEdges">
+          <svg viewBox={`0 0 ${viewSize} ${viewSize}`} shapeRendering="crispEdges">
+            <title>{`QR kode kelas ${code}`}</title>
             <rect width={viewSize} height={viewSize} fill="#fff" />
             {matrix.map((row, r) => row.map((dark, c) => (dark ? <rect key={`${r}-${c}`} x={c + MARGIN} y={r + MARGIN} width="1" height="1" fill="#0f172a" /> : null)))}
           </svg>
