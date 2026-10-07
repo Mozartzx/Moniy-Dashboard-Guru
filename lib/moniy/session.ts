@@ -54,14 +54,16 @@ function generateClassCode() {
 }
 
 export async function createClass(teacher: TeacherProfile, fields: { name: string; academicYear: string | null }) {
+  const id = generateClassCode();
   const { error } = await createClient().from('classes').insert({
-    id: generateClassCode(),
+    id,
     name: fields.name,
     school_name: teacher.schoolName,
     teacher_id: teacher.id,
     academic_year: fields.academicYear,
   });
   if (error) throw error;
+  return { id, name: fields.name };
 }
 
 export async function updateTeacherProfile(id: number, fields: { name: string; nickname: string | null; phone: string | null; schoolName: string | null }) {
