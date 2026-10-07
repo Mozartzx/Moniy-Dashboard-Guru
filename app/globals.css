@@ -566,3 +566,8 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .quest-diff p { margin: 4px 0 0; font-size: var(--text-sm); }
 .quest-classes { display: grid; gap: 8px; }
 .quest-class { display: flex; align-items: center; gap: 10px; font-size: var(--text-sm); }
+/* QR kode kelas */
+.class-qr { display: grid; justify-items: center; gap: 10px; margin: 6px 0 14px; }
+.class-qr svg { width: min(260px, 70vw); height: auto; border: 2px solid var(--border); border-radius: 14px; }
+.class-qr-code { font-size: var(--text-lg, 18px); letter-spacing: .08em; color: var(--navy); }
+.class-qr-button { margin-top: 8px; width: 100%; min-height: 38px; }
