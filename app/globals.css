@@ -533,3 +533,18 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .sidebar-class-swap { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; color: var(--blue-strong); font-size: 13px; font-style: normal; font-weight: 600; }
 .crumbs a { color: var(--blue-strong); font-weight: 600; text-decoration: none; }
 @media (hover: hover) and (pointer: fine) { .crumbs a:hover { text-decoration: underline; } }
+
+/* Modul AI generator */
+.module-form { display: grid; gap: 16px; max-width: 720px; }
+.module-select, .module-textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 14px; color: var(--navy); background: #fff; font-size: var(--text-sm); font-weight: 400; }
+.module-textarea { resize: vertical; line-height: 1.5; }
+.module-select:focus, .module-textarea:focus { border-color: var(--blue); }
+.module-form-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.module-form-actions .primary-button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.module-spin { animation: module-spin 1s linear infinite; }
+@keyframes module-spin { to { transform: rotate(360deg); } }
+.module-result { display: grid; gap: 10px; justify-items: start; }
+.module-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; width: 100%; margin: 0; }
+.module-facts div { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; }
+.module-facts dt { color: var(--muted); font-size: var(--text-xs); }
+.module-facts dd { margin: 4px 0 0; color: var(--navy); font-size: var(--text-base); font-weight: 700; }
