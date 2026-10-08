@@ -42,3 +42,13 @@ delete from public.user_module_progress where user_id in (select id from public.
 delete from public.users where email like '%@seed.moniy.test';
 delete from public.classes where id in ('MONIY-SEEDB1','MONIY-SEEDC1');
 ```
+
+## Log jawaban kuis dummy (2026-10-08)
+
+435 baris `quiz_answer_log` dibuat untuk 87 hasil kuis siswa seed (`@seed.moniy.test`), konsisten dengan
+skor tiap hasil, supaya kartu "Soal kuis yang paling sering keliru" terisi. Membersihkan:
+
+```sql
+delete from public.quiz_answer_log where user_id in (select id from public.users where email like '%@seed.moniy.test');
+```
+
