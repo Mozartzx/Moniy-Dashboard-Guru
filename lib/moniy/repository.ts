@@ -116,7 +116,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         id: String(row.id),
         title: row.game_scenarios?.decision_text ?? 'Keputusan simulasi',
         chapter: row.modules?.title ?? 'Modul',
-        note: row.free_text ?? row.ai_verdict ?? '-',
+        note: row.free_text ?? row.ai_verdict ?? '',
         outcome: row.is_correct === false ? 'perlu-refleksi' : 'tepat',
         time: format(new Date(row.created_at), "d MMM, HH.mm", { locale: idLocale }),
       });
