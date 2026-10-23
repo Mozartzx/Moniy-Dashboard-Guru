@@ -13,11 +13,12 @@ import type {
   TopicProgress,
 } from './types';
 
-// ponytail: quiz_results has no per-question log and quizzes has no topic_id yet
-// (topic_id is deferred to the mobile side, see tasks/mobile-team-requests.md), so
-// per-topic "quizAverage"/"correctRate" below is a proxy from user_module_progress.score,
-// and commonMistake/mistakeRate can't be computed honestly until that log exists.
+// Per-topic quiz numbers come from quizzes.topic_id + quiz_results, and the most
+// frequent mistake from quiz_answer_log (migrations 019). Topics whose quizzes have no
+// results yet fall back to a proxy from user_module_progress.score; commonMistake stays
+// "Belum tersedia" until at least MIN_ATTEMPTS answers to a question are logged.
 const NOT_AVAILABLE = 'Belum tersedia';
+const MIN_ATTEMPTS = 3;
 
 function riskLevelFor(eventCount: number): ClassroomSnapshot['riskLevel'] {
   // ponytail: simple event-count thresholds, no spec-defined ambient baseline yet
@@ -49,13 +50,13 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
     const moduleRows = allModules ?? [];
     const topicRows = topicsMeta ?? [];
 
-    const [{ data: progressRows }, { data: quizRows }, { data: decisionRows }, { data: gamblingRows }, { data: postRows }] = await Promise.all([
+    const [{ data: progressRows }, { data: quizRows }, { data: decisionRows }, { data: gamblingRows }, { data: postRows }, { data: quizMetaRows }, { data: questionRows }, { data: answerLogRows }] = await Promise.all([
       studentIds.length
         ? supabase.from('user_module_progress').select('user_id, module_id, progress, score, completed_at').in('user_id', studentIds)
         : Promise.resolve({ data: [] as Array<{ user_id: number; module_id: number; progress: number | null; score: number | null; completed_at: string | null }> }),
       studentIds.length
-        ? supabase.from('quiz_results').select('user_id, score').in('user_id', studentIds)
-        : Promise.resolve({ data: [] as Array<{ user_id: number; score: number | null }> }),
+        ? supabase.from('quiz_results').select('user_id, quiz_id, score').in('user_id', studentIds)
+        : Promise.resolve({ data: [] as Array<{ user_id: number; quiz_id: number; score: number | null }> }),
       studentIds.length
         ? supabase
             .from('user_decisions')
@@ -75,10 +76,18 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         .select('id, content, reviewed, created_at, community_groups!inner(class_id), users(name)')
         .eq('community_groups.class_id', classId)
         .order('created_at', { ascending: false }),
+      supabase.from('quizzes').select('id, topic_id'),
+      supabase.from('quiz_questions').select('id, quiz_id, question_text'),
+      studentIds.length
+        ? supabase.from('quiz_answer_log').select('user_id, quiz_id, question_id, is_correct').in('user_id', studentIds)
+        : Promise.resolve({ data: [] as Array<{ user_id: number; quiz_id: number; question_id: number; is_correct: boolean }> }),
     ]);
 
     const progress = progressRows ?? [];
     const quizzes = quizRows ?? [];
+    const quizTopicById = new Map<number, number | null>((quizMetaRows ?? []).map((quiz) => [quiz.id, quiz.topic_id]));
+    const questionTextById = new Map<number, string>((questionRows ?? []).map((question) => [question.id, question.question_text]));
+    const answerLog = (answerLogRows ?? []) as Array<{ user_id: number; quiz_id: number; question_id: number; is_correct: boolean }>;
     const decisions = (decisionRows ?? []) as Array<{
       id: number;
       user_id: number;
@@ -166,8 +175,30 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         }
       }
 
-      const scored = relevantProgress.filter((row) => row.score != null).map((row) => row.score as number);
+      const quizScores = quizzes
+        .filter((row) => row.score != null && quizTopicById.get(row.quiz_id) === topic.id)
+        .map((row) => row.score as number);
+      const scored = quizScores.length
+        ? quizScores
+        : relevantProgress.filter((row) => row.score != null).map((row) => row.score as number);
       const average = scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : 0;
+
+      const topicLog = answerLog.filter((entry) => quizTopicById.get(entry.quiz_id) === topic.id);
+      const correctRate = topicLog.length ? Math.round((topicLog.filter((entry) => entry.is_correct).length / topicLog.length) * 100) : average;
+      const attemptsByQuestion = new Map<number, { total: number; wrong: number }>();
+      for (const entry of topicLog) {
+        const stat = attemptsByQuestion.get(entry.question_id) ?? { total: 0, wrong: 0 };
+        stat.total += 1;
+        if (!entry.is_correct) stat.wrong += 1;
+        attemptsByQuestion.set(entry.question_id, stat);
+      }
+      let worst: { questionId: number; total: number; wrong: number } | null = null;
+      for (const [questionId, stat] of attemptsByQuestion) {
+        if (stat.total < MIN_ATTEMPTS || stat.wrong === 0) continue;
+        if (!worst || stat.wrong / stat.total > worst.wrong / worst.total || (stat.wrong / stat.total === worst.wrong / worst.total && stat.total > worst.total)) {
+          worst = { questionId, ...stat };
+        }
+      }
 
       return {
         id: String(topic.id),
@@ -177,9 +208,11 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         inProgress,
         completed,
         quizAverage: average,
-        correctRate: average,
-        commonMistake: NOT_AVAILABLE,
-        mistakeRate: 0,
+        correctRate,
+        commonMistake: worst
+          ? `Soal “${questionTextById.get(worst.questionId) ?? 'Soal kuis'}” paling sering dijawab salah (${worst.wrong} dari ${worst.total} jawaban)`
+          : NOT_AVAILABLE,
+        mistakeRate: worst ? Math.round((worst.wrong / worst.total) * 100) : 0,
       };
     });
 

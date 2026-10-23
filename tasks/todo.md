@@ -51,7 +51,7 @@ Rencana lengkap: `C:\Users\ASUS Vivobook\.claude\plans\gleaming-cuddling-waffle.
       redirect `/dashboard/*` -> `/login` tanpa sesi terkonfirmasi.
 
 ## Belum / di luar scope kali ini
-- [ ] `quizzes.topic_id` — ditunda, tanggung jawab Gilang (mobile). Lihat `tasks/mobile-team-requests.md`.
+- [x] `quizzes.topic_id` + `quiz_answer_log` — selesai 2026-10-08 (migrasi 019); dashboard membacanya. Lihat `tasks/mobile-team-requests.md`.
 - [ ] `commonMistake`/`mistakeRate` per topik butuh tabel log jawaban per soal kuis yang belum
       ada — saat ini dirender "Belum tersedia" (`lib/moniy/repository.ts`, komentar `ponytail:`).
 - [ ] Label "Data contoh" / "mock-data-label" masih tertinggal di beberapa halaman

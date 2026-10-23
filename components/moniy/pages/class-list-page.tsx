@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRight, GraduationCap, LogOut, Plus, School, X } from 'lucide-react';
+import { ArrowRight, GraduationCap, LogOut, Plus, QrCode, School, X } from 'lucide-react';
 import { type CSSProperties, type SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
+import { ClassQrDialog } from '@/components/moniy/class-qr-dialog';
 import { SignOutDialog } from '@/components/moniy/dashboard/shell-dialogs';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { setActiveClassId } from '@/lib/moniy/active-class';
@@ -16,6 +17,7 @@ export function ClassListPage() {
   const [teacher, setTeacher] = useState<TeacherProfile | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
+  const [qrClass, setQrClass] = useState<{ id: string; name: string } | null>(null);
   const [className, setClassName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
   const [error, setError] = useState('');
@@ -50,9 +52,10 @@ export function ClassListPage() {
     setError('');
     setSubmitting(true);
     try {
-      await createClass(teacher, { name: className.trim(), academicYear: academicYear.trim() || null });
+      const created = await createClass(teacher, { name: className.trim(), academicYear: academicYear.trim() || null });
       await load();
       setCreateOpen(false);
+      setQrClass(created);
       setClassName('');
       setAcademicYear('');
       setToast('Kelas dibuat.');
@@ -115,6 +118,7 @@ export function ClassListPage() {
                       <span className="class-card-stats"><b className="class-chip">{item.studentCount} siswa</b><b className="class-chip">{item.id}</b></span>
                       <span className="class-card-open">Buka dashboard <ArrowRight size={16} aria-hidden="true" /></span>
                     </BrowserNavigationLink>
+                    <button className="secondary-button class-qr-button" type="button" onClick={() => setQrClass({ id: item.id, name: item.name })}><QrCode size={16} /> QR kelas</button>
                   </li>
                 ))}
               </ul>
@@ -142,6 +146,7 @@ export function ClassListPage() {
           </form>
         </DialogContent>
       </Dialog>
+      {qrClass ? <ClassQrDialog open onOpenChange={(open) => { if (!open) setQrClass(null); }} code={qrClass.id} name={qrClass.name} /> : null}
       <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />
       {toast ? <output className="toast-message">{toast}</output> : null}
     </main>
