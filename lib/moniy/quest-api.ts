@@ -116,6 +116,9 @@ export const questApi = {
     stream('/quest/outline/stream', body, onEvent),
   draftStream: (body: { topicId: number; prompt: string; outline: Outline }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/drafts/stream', body, onEvent),
+  /** Riwayat chat dan kerangka per simulasi, tersimpan di server. */
+  getChat: (id: number) => call<{ turns: unknown[] }>('GET', `/quest/${id}/chat`),
+  saveChat: (id: number, turns: unknown[]) => call<{ saved: boolean }>('PUT', `/quest/${id}/chat`, { turns }),
   createDraft: (topicId: number, prompt: string) => call<Quest>('POST', '/quest/drafts', { topicId, prompt }),
   saveBackground: (id: number, patch: Partial<Pick<Background, 'role' | 'story' | 'cash' | 'income' | 'cost'>>) =>
     call<unknown>('PATCH', `/quest/${id}/background`, patch),

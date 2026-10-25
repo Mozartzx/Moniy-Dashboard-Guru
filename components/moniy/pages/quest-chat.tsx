@@ -71,17 +71,17 @@ function SplitLayout({ chat, panel, open, narrow }: { chat: ReactNode; panel: Re
   );
 }
 
-/** Riwayat chat dan kerangka disimpan di browser per simulasi, supaya terlihat lagi saat simulasi dibuka dari daftar. */
-const storeKey = (questId: number) => `moniy.sim.chat.${questId}`;
-function loadSaved(questId: number): Turn[] {
+/** Riwayat chat dan kerangka tersimpan di server per simulasi (tabel quest_chats), supaya terlihat lagi di perangkat mana pun. */
+const asTurns = (raw: unknown): Turn[] => (Array.isArray(raw)
+  ? (raw as Turn[]).filter((t) => t && typeof t.id === 'number' && (t.role === 'user' || t.role === 'ai')).map((t) => (t.role === 'ai' ? { ...t, running: false } : t))
+  : []);
+
+/** Riwayat lama yang sempat disimpan di browser (sebelum ada database): dibaca sekali lalu dipindahkan ke server. */
+function legacyTurns(questId: number): Turn[] {
   try {
-    const raw = window.localStorage.getItem(storeKey(questId));
-    const saved = raw ? (JSON.parse(raw) as { turns?: Turn[] }).turns : undefined;
-    return Array.isArray(saved) ? saved.map((t) => (t.role === 'ai' ? { ...t, running: false } : t)) : [];
+    const raw = window.localStorage.getItem(`moniy.sim.chat.${questId}`);
+    return raw ? asTurns((JSON.parse(raw) as { turns?: unknown }).turns) : [];
   } catch { return []; }
-}
-function saveTurns(questId: number, turns: Turn[]) {
-  try { window.localStorage.setItem(storeKey(questId), JSON.stringify({ v: 1, turns })); } catch { /* penyimpanan penuh atau diblokir: riwayat tidak tersimpan */ }
 }
 
 export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChange, onResumeFailed }: {
@@ -99,6 +99,8 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const [resumeTopic, setResumeTopic] = useState('');
   const narrow = useNarrow();
   const nextId = useRef(1);
+  // Giliran yang sudah ada di server (dimuat atau baru disimpan); mencegah menyimpan ulang yang sama.
+  const savedTurns = useRef<Turn[] | null>(null);
   const active = turns.length > 0;
   const topicId = pickedTopic || (topics.length ? String(topics[0].id) : '');
 
@@ -106,13 +108,18 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   useEffect(() => {
     if (resumeId === null) return;
     let live = true;
-    void questApi.get(resumeId).then((q) => {
+    void Promise.all([questApi.get(resumeId), questApi.getChat(resumeId).catch(() => ({ turns: [] }))]).then(([q, chat]) => {
       if (!live) return;
       const info: DoneInfo = { questId: q.id, title: q.title, balanceOk: q.balance.ok, warnings: q.balance.warnings };
       setResumeTopic(q.topic ?? '');
-      const saved = loadSaved(resumeId);
+      let saved = asTurns(chat.turns);
+      if (!saved.length) {
+        saved = legacyTurns(resumeId);
+        if (saved.length) void questApi.saveChat(resumeId, saved).catch(() => undefined);
+      }
       if (saved.length) {
         nextId.current = Math.max(...saved.map((t) => t.id)) + 1;
+        savedTurns.current = saved;
         setTurns(saved);
       } else {
         setTurns([{
@@ -144,7 +151,11 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const latestOutline = versions[versions.length - 1];
   const shownVersion = Math.min(pickedVersion ?? versions.length - 1, versions.length - 1);
   const doneInfo = aiTurns.find((t) => t.done)?.done ?? null;
-  useEffect(() => { if (doneInfo && !busy) saveTurns(doneInfo.questId, turns); }, [turns, doneInfo, busy]);
+  useEffect(() => {
+    if (!doneInfo || busy || turns === savedTurns.current) return;
+    savedTurns.current = turns;
+    void questApi.saveChat(doneInfo.questId, turns.slice(-60)).catch(() => undefined);
+  }, [turns, doneInfo, busy]);
   const topicLabel = resumeId !== null ? resumeTopic : (topics.find((t) => String(t.id) === topicId)?.title ?? '');
 
   const run = async (stage: 'kerangka' | 'simulasi', go: (onEvent: (e: StreamEvent) => void) => Promise<void>) => {
