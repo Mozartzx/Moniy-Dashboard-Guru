@@ -1,19 +1,19 @@
 'use client';
 
-import { Check, Loader2, RotateCcw, Send, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { errText, questApi, type Outline, type Quest, type StreamEvent } from '@/lib/moniy/quest-api';
+import { Check, Loader2, PanelRightClose, PanelRightOpen, RotateCcw, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useDefaultLayout } from 'react-resizable-panels';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { errText, questApi, type Outline, type StreamEvent } from '@/lib/moniy/quest-api';
 import { FormSelect } from './form-select';
-import { SendPanel } from './quest-send-panel';
+import { SimPanel, type DoneInfo } from './quest-panel';
 
 type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
 type Topic = { id: number; title: string };
 type StepRow = { key: string; label: string; status: 'running' | 'done' | 'failed' };
-type DoneInfo = { questId: number; title: string; balanceOk: boolean; warnings: string[] };
-type Turn =
-  | { id: number; role: 'user'; text: string }
-  | { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; reply?: string; error?: string; done?: DoneInfo; running: boolean };
+type AiTurn = { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; reply?: string; error?: string; done?: DoneInfo; running: boolean };
+type Turn = { id: number; role: 'user'; text: string } | AiTurn;
 
 const WAIT_NOTE = 'Proses generate memakan waktu. Mohon jangan tutup halaman ini.';
 
@@ -45,59 +45,29 @@ function StepList({ steps }: { steps: StepRow[] }) {
   );
 }
 
-function OutlineView({ outline }: { outline: Outline }) {
-  return (
-    <div className="sim-outline">
-      <div className="sim-outline-head">
-        <strong>{outline.judul}</strong>
-        <span>{outline.tokoh}</span>
-        {outline.rentang ? <span>Rentang cerita: {outline.rentang}</span> : null}
-      </div>
-      <ol>
-        {outline.items.map((it, i) => (
-          <li className="sim-item" key={i}>
-            <div className="sim-item-top">
-              <span className="sim-num">{i + 1}</span>
-              <span className={`sim-badge sim-badge-${it.jenis}`}>{it.jenis === 'kondisi' ? 'Kondisi' : 'Kejadian acak'}</span>
-              {it.waktu ? <span className="sim-when">{it.waktu}</span> : null}
-              <strong>{it.judul}</strong>
-            </div>
-            <p>{it.inti}</p>
-            <div className="sim-learn">
-              <span>Yang dipelajari siswa</span>
-              <ul>{it.belajar.map((b, j) => <li key={j}>{b}</li>)}</ul>
-            </div>
-          </li>
-        ))}
-      </ol>
-      {outline.cakupan?.length ? (
-        <div className="sim-coverage">
-          <strong>Cakupan materi chapter</strong>
-          <ul>{outline.cakupan.map((c) => <li key={c.materi}>{c.materi}: skenario {c.skenario.join(', ')}</li>)}</ul>
-        </div>
-      ) : null}
-    </div>
+/** Layar sempit: panel menggantikan chat (bukan berdampingan). */
+function useNarrow() {
+  return useSyncExternalStore(
+    (cb) => { const m = window.matchMedia('(max-width: 900px)'); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
+    () => window.matchMedia('(max-width: 900px)').matches,
+    () => false,
   );
 }
 
-function DonePanel({ done, classOptions, notify, onOpen }: { done: DoneInfo; classOptions: ClassOption[]; notify: Notify; onOpen: (id: number) => void }) {
-  const [quest, setQuest] = useState<Quest | null>(null);
-  const load = useCallback(async () => { setQuest(await questApi.get(done.questId)); }, [done.questId]);
-  useEffect(() => {
-    let live = true;
-    void questApi.get(done.questId).then((q) => { if (live) setQuest(q); });
-    return () => { live = false; };
-  }, [done.questId]);
+/** Dua kolom yang bisa digeser; lebar tersimpan di browser. Hanya dirender setelah obrolan dimulai (tidak ikut SSR). */
+function SplitLayout({ chat, panel, open, narrow }: { chat: ReactNode; panel: ReactNode; open: boolean; narrow: boolean }) {
+  const layout = useDefaultLayout({ id: 'sim-split', panelIds: ['chat', 'panel'] });
+  if (narrow) return <div className="sim-single">{open ? panel : chat}</div>;
   return (
-    <div className="sim-done">
-      <div className="sim-done-head">
-        <strong>Simulasi siap: {done.title}</strong>
-        <span className={`sim-badge ${done.balanceOk ? 'sim-badge-ok' : 'sim-badge-warn'}`}>{done.balanceOk ? 'Seimbang' : 'Perlu diperbaiki'}</span>
-      </div>
-      {done.warnings.length ? <ul className="quest-warnings">{done.warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null}
-      {quest ? <SendPanel quest={quest} classOptions={classOptions} onDone={load} notify={notify} /> : <div className="skeleton sim-skeleton" aria-label="Memuat pengiriman" />}
-      <div><button className="secondary-button" type="button" onClick={() => onOpen(done.questId)}>Buka detail dan edit manual</button></div>
-    </div>
+    <ResizablePanelGroup orientation="horizontal" className="sim-split" id="sim-split" defaultLayout={layout.defaultLayout} onLayoutChanged={layout.onLayoutChanged}>
+      <ResizablePanel id="chat" minSize="30%">{chat}</ResizablePanel>
+      {open ? (
+        <>
+          <ResizableHandle withHandle className="sim-handle" />
+          <ResizablePanel id="panel" defaultSize="45%" minSize="28%" maxSize="70%">{panel}</ResizablePanel>
+        </>
+      ) : null}
+    </ResizablePanelGroup>
   );
 }
 
@@ -109,6 +79,10 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   const [reply, setReply] = useState('');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [pickedVersion, setPickedVersion] = useState<number | null>(null);
+  const [view, setView] = useState<'kerangka' | 'simulasi'>('kerangka');
+  const narrow = useNarrow();
   const nextId = useRef(1);
   const active = turns.length > 0;
   const topicId = pickedTopic || (topics.length ? String(topics[0].id) : '');
@@ -125,14 +99,16 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     return () => window.removeEventListener('beforeunload', warn);
   }, [busy]);
 
+  const aiTurns = turns.filter((t): t is AiTurn => t.role === 'ai');
+  const versions = aiTurns.flatMap((t) => (t.outline ? [t.outline] : []));
+  const latestOutline = versions[versions.length - 1];
+  const shownVersion = Math.min(pickedVersion ?? versions.length - 1, versions.length - 1);
+  const doneInfo = aiTurns.find((t) => t.done)?.done ?? null;
   const topicLabel = topics.find((t) => String(t.id) === topicId)?.title ?? '';
-  const latestOutline = [...turns].reverse().find((t): t is Extract<Turn, { role: 'ai' }> => t.role === 'ai' && !!t.outline)?.outline;
-  const finished = turns.some((t) => t.role === 'ai' && t.done);
 
   const run = async (stage: 'kerangka' | 'simulasi', go: (onEvent: (e: StreamEvent) => void) => Promise<void>) => {
     const id = nextId.current++;
-    const patch = (fn: (t: Extract<Turn, { role: 'ai' }>) => Extract<Turn, { role: 'ai' }>) =>
-      setTurns((prev) => prev.map((t) => (t.id === id && t.role === 'ai' ? fn(t) : t)));
+    const patch = (fn: (t: AiTurn) => AiTurn) => setTurns((prev) => prev.map((t) => (t.id === id && t.role === 'ai' ? fn(t) : t)));
     setTurns((prev) => [...prev, { id, role: 'ai', stage, steps: [], running: true }]);
     setBusy(true);
     let ended = false;
@@ -140,10 +116,14 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     const onEvent = (e: StreamEvent) => {
       if (e.type === 'step') {
         patch((t) => ({ ...t, steps: t.steps.some((s) => s.key === e.key) ? t.steps.map((s) => (s.key === e.key ? { ...s, label: e.label, status: e.status } : s)) : [...t.steps, { key: e.key, label: e.label, status: e.status }] }));
-      } else if (e.type === 'outline') { ended = true; patch((t) => ({ ...t, outline: e.outline })); }
-      else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
-      else if (e.type === 'done') { ended = true; patch((t) => ({ ...t, done: { questId: e.questId, title: e.title, balanceOk: e.balanceOk, warnings: e.warnings } })); }
-      else if (e.type === 'error') { ended = true; patch((t) => ({ ...t, error: e.message })); }
+      } else if (e.type === 'outline') {
+        ended = true; patch((t) => ({ ...t, outline: e.outline }));
+        setPickedVersion(null); setView('kerangka'); setPanelOpen(true);
+      } else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
+      else if (e.type === 'done') {
+        ended = true; patch((t) => ({ ...t, done: { questId: e.questId, title: e.title, balanceOk: e.balanceOk, warnings: e.warnings } }));
+        setView('simulasi'); setPanelOpen(true);
+      } else if (e.type === 'error') { ended = true; patch((t) => ({ ...t, error: e.message })); }
     };
     try { await go(onEvent); } catch (err) { patch((t) => ({ ...t, error: errText(err) })); ended = true; }
     if (!ended) patch((t) => ({ ...t, error: 'Koneksi terputus sebelum selesai. Coba lagi.' }));
@@ -172,7 +152,9 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     addUser('Kerangka disetujui. Buat simulasinya.');
     void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline }, on));
   };
-  const reset = () => { setTurns([]); setReply(''); };
+  const reset = () => { setTurns([]); setReply(''); setPanelOpen(false); setPickedVersion(null); setView('kerangka'); };
+  const showVersion = (i: number) => { setPickedVersion(i); setView('kerangka'); setPanelOpen(true); };
+  const showSimulasi = () => { setView('simulasi'); setPanelOpen(true); };
 
   if (!active) {
     const len = idea.trim().length;
@@ -195,31 +177,52 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     );
   }
 
-  return (
-    <div className="sim-chat">
+  const hasPanelContent = versions.length > 0 || !!doneInfo;
+  const versionIndex = new Map<number, number>();
+  aiTurns.forEach((t) => { if (t.outline) versionIndex.set(t.id, versionIndex.size); });
+
+  const chat = (
+    <div className="sim-chatcol">
       <div className="sim-chat-top">
         <p>{topicLabel}</p>
-        <button className="secondary-button" type="button" onClick={reset} disabled={busy}><RotateCcw size={16} /> Mulai baru</button>
+        <div className="sim-chat-actions">
+          {hasPanelContent ? (
+            <button className="secondary-button" type="button" onClick={() => setPanelOpen((v) => !v)} aria-pressed={panelOpen}>
+              {panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />} {panelOpen ? 'Tutup panel' : 'Buka panel'}
+            </button>
+          ) : null}
+          <button className="secondary-button" type="button" onClick={reset} disabled={busy}><RotateCcw size={16} /> Mulai baru</button>
+        </div>
       </div>
       <div className="sim-thread">
         {turns.map((t) => {
           if (t.role === 'user') return <div className="sim-msg sim-msg-user" id={`sim-turn-${t.id}`} key={t.id}>{t.text}</div>;
-          const isLatest = t.outline && t.outline === latestOutline;
+          const myVersion = versionIndex.get(t.id) ?? -1;
           return (
             <div className="sim-msg sim-msg-ai" key={t.id}>
               <StepList steps={t.steps} />
               {t.reply ? <p className="sim-reply">{t.reply}</p> : null}
               {t.running ? <p className="sim-wait">{WAIT_NOTE}</p> : null}
-              {t.running && t.stage === 'kerangka' && !t.outline && t.steps.some((s) => s.key === 'rancang') ? <div className="sim-skeletons" aria-label="Menyusun kerangka"><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /></div> : null}
-              {t.outline ? (isLatest ? <OutlineView outline={t.outline} /> : <details className="sim-old"><summary>Lihat kerangka versi sebelumnya</summary><OutlineView outline={t.outline} /></details>) : null}
+              {t.outline ? (
+                <div className="sim-result">
+                  <div><strong>Kerangka versi {myVersion + 1} siap</strong><span>{t.outline.judul}, {t.outline.items.length} skenario</span></div>
+                  <button className="secondary-button" type="button" onClick={() => showVersion(myVersion)}>Lihat di panel</button>
+                </div>
+              ) : null}
               {t.error ? <p className="field-error" role="alert">{t.error}</p> : null}
-              {t.done ? <DonePanel done={t.done} classOptions={classOptions} notify={notify} onOpen={onOpen} /> : null}
+              {t.done ? (
+                <div className="sim-result">
+                  <div><strong>Simulasi siap</strong><span>{t.done.title}</span></div>
+                  <span className={`sim-badge ${t.done.balanceOk ? 'sim-badge-ok' : 'sim-badge-warn'}`}>{t.done.balanceOk ? 'Seimbang' : 'Perlu diperbaiki'}</span>
+                  <button className="secondary-button" type="button" onClick={showSimulasi}>Lihat di panel</button>
+                </div>
+              ) : null}
             </div>
           );
         })}
       </div>
-      {finished ? (
-        <div><button className="secondary-button" type="button" onClick={reset}>Buat simulasi baru</button></div>
+      {doneInfo ? (
+        <div className="sim-composer"><button className="secondary-button" type="button" onClick={reset}>Buat simulasi baru</button></div>
       ) : (
         <div className="sim-composer">
           <textarea className="module-textarea" rows={2} maxLength={400} value={reply} disabled={busy || !latestOutline} onChange={(e) => setReply(e.target.value)}
@@ -233,4 +236,11 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
       )}
     </div>
   );
+
+  const panel = (
+    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} view={view} onView={setView} done={doneInfo}
+      classOptions={classOptions} notify={notify} onOpen={onOpen} onClose={() => setPanelOpen(false)} />
+  );
+
+  return <SplitLayout chat={chat} panel={panel} open={panelOpen && hasPanelContent} narrow={narrow} />;
 }
