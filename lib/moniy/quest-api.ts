@@ -24,7 +24,7 @@ export type RefreshOverview = {
   students: { userId: number; name: string; classId: string; started: boolean; refreshDays: number; lastRefreshDate: string | null; cash: number | null; day: number | null; phase: string | null }[];
 };
 
-export type OutlineItem = { jenis: 'kondisi' | 'kejadian'; judul: string; inti: string; belajar: string };
+export type OutlineItem = { jenis: 'kondisi' | 'kejadian'; judul: string; inti: string; belajar: string[] };
 export type Outline = { judul: string; tokoh: string; items: OutlineItem[] };
 
 export type StreamEvent =

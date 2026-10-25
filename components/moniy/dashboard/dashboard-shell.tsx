@@ -38,7 +38,7 @@ function LoadingState() {
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const currentRoute = getDashboardRoute(pathname);
-  const { dashboard, className, classOptions, activeClass, teacher, reloadSession, toast, notify } = useDashboardContext();
+  const { dashboard, className, classOptions, activeClass, teacher, reloadSession, toast, notify, focusMode } = useDashboardContext();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
@@ -62,8 +62,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const teacherInitials = teacher?.name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase() ?? '..';
 
   return (
-    <div className="dashboard-shell">
-      <aside className={`dashboard-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
+    <div className={`dashboard-shell ${focusMode ? 'dashboard-shell-focus' : ''}`}>
+      {focusMode ? null : <aside className={`dashboard-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <BrowserNavigationLink href="/dashboard/ringkasan" className="sidebar-logo-link" aria-label="Moniy, ke ringkasan dashboard" onClick={() => setMobileNavOpen(false)}>
             <Image src="/assets/moniy-logo.png" alt="" width={148} height={43} priority />
@@ -90,23 +90,29 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <em className="sidebar-class-swap"><ArrowLeftRight size={14} /> Ganti kelas</em>
           </div>
         </BrowserNavigationLink>
-      </aside>
-      {mobileNavOpen ? <button className="mobile-scrim" aria-label="Tutup navigasi" onClick={() => setMobileNavOpen(false)} /> : null}
+      </aside>}
+      {mobileNavOpen && !focusMode ? <button className="mobile-scrim" aria-label="Tutup navigasi" onClick={() => setMobileNavOpen(false)} /> : null}
 
       <section className="dashboard-workspace">
-        <header className="dashboard-topbar">
-          <div className="topbar-title">
+        <header className={`dashboard-topbar ${focusMode ? 'topbar-focus' : ''}`}>
+          {focusMode ? (
+            <BrowserNavigationLink href="/dashboard/ringkasan" className="focus-logo-link" aria-label="Moniy, ke ringkasan dashboard">
+              <Image src="/assets/moniy-logo.png" alt="" width={120} height={35} priority />
+            </BrowserNavigationLink>
+          ) : <div className="topbar-title">
             <button className="mobile-menu" onClick={() => setMobileNavOpen(true)} aria-label="Buka menu"><Menu size={22} /></button>
             <div>
               <small className="crumbs"><BrowserNavigationLink href="/kelas">Daftar kelas</BrowserNavigationLink> / {className || '...'} / {currentRoute.title}</small>
               <strong>{currentRoute.title}</strong>
             </div>
-          </div>
+          </div>}
           <div className="topbar-controls">
-            <FilterSelect label="Kelas" icon={School} value={dashboard.classId} options={classOptions} onValueChange={dashboard.setClassId} />
-            <FilterSelect label="Periode" icon={BookOpenCheck} value={dashboard.period} options={periodOptions} onValueChange={dashboard.setPeriod} compact />
-            <button className="manage-class-button" type="button" onClick={() => setManageOpen(true)}><Settings2 size={18} /> Kelola kelas</button>
-            <button className="icon-button notification-button" type="button" onClick={() => notify('Tidak ada notifikasi baru.', 2600)} aria-label="Notifikasi"><Bell size={20} /></button>
+            {focusMode ? null : <>
+              <FilterSelect label="Kelas" icon={School} value={dashboard.classId} options={classOptions} onValueChange={dashboard.setClassId} />
+              <FilterSelect label="Periode" icon={BookOpenCheck} value={dashboard.period} options={periodOptions} onValueChange={dashboard.setPeriod} compact />
+              <button className="manage-class-button" type="button" onClick={() => setManageOpen(true)}><Settings2 size={18} /> Kelola kelas</button>
+              <button className="icon-button notification-button" type="button" onClick={() => notify('Tidak ada notifikasi baru.', 2600)} aria-label="Notifikasi"><Bell size={20} /></button>
+            </>}
             <div className="profile-wrap" ref={profileRef}>
               <button className="profile-trigger" type="button" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen}>
                 <span className="teacher-avatar">{teacherInitials}</span><span><strong>{teacher?.name ?? 'Memuat...'}</strong><small>Guru</small></span><ChevronDown size={15} />

@@ -261,7 +261,7 @@ function QuestEditor({ id, classOptions, notify, onBack }: { id: number; classOp
   );
 }
 
-export function QuestPage({ notify, classOptions }: { notify: Notify; classOptions: ClassOption[] }) {
+export function QuestPage({ notify, classOptions, onFocusChange }: { notify: Notify; classOptions: ClassOption[]; onFocusChange: (focus: boolean) => void }) {
   const [topics, setTopics] = useState<{ id: number; title: string }[]>([]);
   const [list, setList] = useState<QuestSummary[] | null>(null);
   const [chatActive, setChatActive] = useState(false);
@@ -273,6 +273,11 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
     void questApi.topics().then(setTopics);
     void loadList();
   }, [loadList]);
+  // Saat obrolan berjalan, halaman fokus ke pembuatan: sidebar dan kontrol topbar disembunyikan.
+  useEffect(() => {
+    onFocusChange(chatActive && openId === null);
+    return () => onFocusChange(false);
+  }, [chatActive, openId, onFocusChange]);
 
   if (openId !== null) return <QuestEditor id={openId} classOptions={classOptions} notify={notify} onBack={() => { setOpenId(null); void loadList(); }} />;
 
@@ -282,13 +287,13 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
 
   return (
     <div className="page-stack">
-      <section className="page-intro">
+      {chatActive ? null : <section className="page-intro">
         <div>
           <span className="page-kicker">Simulasi</span>
           <h1>Buat Simulasi Keuangan</h1>
           <p>Pilih topik dan tulis ide ceritanya. Moniy menyusun kerangka untuk kamu periksa, lalu menulis simulasinya.</p>
         </div>
-      </section>
+      </section>}
 
       <QuestChat topics={topics} classOptions={classOptions} notify={notify} onOpen={setOpenId} onActiveChange={setChatActive} />
 

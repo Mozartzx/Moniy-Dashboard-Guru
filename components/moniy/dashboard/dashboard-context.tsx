@@ -17,6 +17,9 @@ type DashboardContextValue = {
   toast: string;
   notify: (message: string, duration?: number) => void;
   reviewCommunityPost: (postId: string) => Promise<void>;
+  /** Mode fokus: sidebar dan kontrol topbar disembunyikan, hanya logo dan profil. */
+  focusMode: boolean;
+  setFocusMode: (value: boolean) => void;
 };
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -26,6 +29,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [teacher, setTeacher] = useState<TeacherProfile | null>(null);
   const dashboard = useMoniyDashboard(classes.map((item) => item.id));
   const [toast, setToast] = useState('');
+  const [focusMode, setFocusMode] = useState(false);
   const toastTimer = useRef<number | null>(null);
 
   const reloadSession = async () => {
@@ -65,6 +69,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       await dashboard.markPostReviewed(postId);
       notify('Postingan ditandai sudah ditinjau.');
     },
+    focusMode,
+    setFocusMode,
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

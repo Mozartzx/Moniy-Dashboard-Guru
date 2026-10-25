@@ -58,7 +58,10 @@ function OutlineView({ outline }: { outline: Outline }) {
               <strong>{it.judul}</strong>
             </div>
             <p>{it.inti}</p>
-            <p className="sim-learn"><span>Yang dipelajari siswa</span>{it.belajar}</p>
+            <div className="sim-learn">
+              <span>Yang dipelajari siswa</span>
+              <ul>{it.belajar.map((b, j) => <li key={j}>{b}</li>)}</ul>
+            </div>
           </li>
         ))}
       </ol>
