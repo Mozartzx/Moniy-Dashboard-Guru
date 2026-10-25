@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/client';
 
 // Quest dibuat lewat backend Moniy (NestJS), bukan langsung ke Supabase: backend yang
 // memegang kunci AI, aturan keseimbangan, dan pengecekan guru terverifikasi.
-const API_BASE = (process.env.NEXT_PUBLIC_MONIY_API_URL ?? 'https://moniy-api.vercel.app').replace(/\/$/, '');
+// Default ke API VPS (app.moniy.site): backend itu di-deploy langsung dan mendukung streaming; Vercel hanya berubah saat main aplikasi digabung.
+const API_BASE = (process.env.NEXT_PUBLIC_MONIY_API_URL ?? 'https://app.moniy.site/api').replace(/\/$/, '');
 
 export type Verdict = 'cerdas' | 'biasa' | 'buruk';
 
@@ -23,9 +24,60 @@ export type RefreshOverview = {
   students: { userId: number; name: string; classId: string; started: boolean; refreshDays: number; lastRefreshDate: string | null; cash: number | null; day: number | null; phase: string | null }[];
 };
 
+export type OutlineItem = { jenis: 'kondisi' | 'kejadian'; judul: string; inti: string; belajar: string };
+export type Outline = { judul: string; tokoh: string; items: OutlineItem[] };
+
+export type StreamEvent =
+  | { type: 'step'; key: string; label: string; status: 'running' | 'done' | 'failed' }
+  | { type: 'outline'; outline: Outline }
+  | { type: 'done'; questId: number; title: string; balanceOk: boolean; warnings: string[] }
+  | { type: 'error'; message: string }
+  | { type: 'ping' };
+
 export class QuestApiError extends Error {
   constructor(message: string, readonly status: number, readonly warnings: string[] = []) {
     super(message);
+  }
+}
+
+export const errText = (e: unknown) => (e instanceof QuestApiError ? e.message : 'Terjadi kesalahan. Coba lagi.');
+
+/** POST yang dijawab NDJSON: satu objek JSON per baris, dibaca saat tiba. Selesai saat stream ditutup server. */
+async function stream(path: string, body: unknown, onEvent: (e: StreamEvent) => void): Promise<void> {
+  const { data: { session } } = await createClient().auth.getSession();
+  if (!session) throw new QuestApiError('Sesi berakhir. Masuk lagi.', 401);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new QuestApiError('Koneksi terputus. Coba lagi.', 0);
+  }
+  if (!res.ok || !res.body) {
+    const json = (await res.json().catch(() => ({}))) as { message?: string | string[] };
+    const message = Array.isArray(json.message) ? json.message.join(' ') : json.message;
+    throw new QuestApiError(message ?? 'Terjadi kesalahan. Coba lagi.', res.status);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try { onEvent(JSON.parse(line) as StreamEvent); } catch { /* baris rusak dilewati */ }
+      }
+    }
+  } catch {
+    throw new QuestApiError('Koneksi terputus sebelum selesai. Coba lagi.', 0);
   }
 }
 
@@ -57,6 +109,10 @@ export const questApi = {
   },
   mine: () => call<QuestSummary[]>('GET', '/quest/mine'),
   get: (id: number) => call<Quest>('GET', `/quest/${id}`),
+  outlineStream: (body: { topicId: number; prompt: string; outline?: Outline; instruction?: string }, onEvent: (e: StreamEvent) => void) =>
+    stream('/quest/outline/stream', body, onEvent),
+  draftStream: (body: { topicId: number; prompt: string; outline: Outline }, onEvent: (e: StreamEvent) => void) =>
+    stream('/quest/drafts/stream', body, onEvent),
   createDraft: (topicId: number, prompt: string) => call<Quest>('POST', '/quest/drafts', { topicId, prompt }),
   saveBackground: (id: number, patch: Partial<Pick<Background, 'role' | 'story' | 'cash' | 'income' | 'cost'>>) =>
     call<unknown>('PATCH', `/quest/${id}/background`, patch),

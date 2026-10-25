@@ -1,19 +1,20 @@
 'use client';
 
-import { ArrowLeft, Check, Loader2, RefreshCw, Send, Sparkles, Trash2, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, PenLine, RefreshCw, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  questApi, QuestApiError,
+  errText, questApi,
   type Background, type Balance, type Choice, type Proposal, type Quest, type QuestSummary, type RefreshOverview, type Step,
 } from '@/lib/moniy/quest-api';
 import { EmptyState } from './page-primitives';
 import { FormSelect } from './form-select';
+import { QuestChat } from './quest-chat';
+import { SendPanel } from './quest-send-panel';
 
 type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
 
 const rupiah = (value: number) => `Rp${value.toLocaleString('id-ID')}`;
-const errText = (e: unknown) => (e instanceof QuestApiError ? e.message : 'Terjadi kesalahan. Coba lagi.');
 const VERDICT_LABEL = { cerdas: 'Cerdas', biasa: 'Biasa', buruk: 'Buruk' } as const;
 
 function NumberField({ label, value, onChange, step = 10_000, disabled, hint }: {
@@ -171,7 +172,7 @@ function PolishPanel({ quest, onApplied, notify }: { quest: Quest; onApplied: ()
       </div></div>
       <div className="module-form-actions">
         <button className="secondary-button" type="button" onClick={run} disabled={busy}>
-          {busy ? <><Loader2 size={18} className="module-spin" /> AI membaca ceritamu...</> : <><Sparkles size={18} /> Minta usulan AI</>}
+          {busy ? <><Loader2 size={18} className="module-spin" /> AI membaca ceritamu...</> : <><PenLine size={18} /> Minta usulan AI</>}
         </button>
       </div>
       {error ? <p className="field-error" role="alert">{error}</p> : null}
@@ -186,49 +187,6 @@ function PolishPanel({ quest, onApplied, notify }: { quest: Quest; onApplied: ()
         </div>
       ))}
       {proposals && !proposals.length ? <p className="field-hint">Tidak ada usulan yang tersisa.</p> : null}
-    </section>
-  );
-}
-
-function SendPanel({ quest, classOptions, onDone, notify }: { quest: Quest; classOptions: ClassOption[]; onDone: () => Promise<void>; notify: Notify }) {
-  const [picked, setPicked] = useState<string[]>([]);
-  const [refresh, setRefresh] = useState(quest.refreshEnabled);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const draft = quest.status === 'draft';
-  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
-
-  const send = async () => {
-    setBusy(true); setError('');
-    try {
-      if (draft) await questApi.publish(quest.id, picked, refresh); else await questApi.assign(quest.id, picked);
-      setPicked([]);
-      await onDone();
-      notify(draft ? 'Simulasi dikirim ke kelas.' : 'Simulasi ditambahkan ke kelas.');
-    } catch (e) { setError(errText(e)); } finally { setBusy(false); }
-  };
-
-  return (
-    <section className="surface-card module-form">
-      <div className="section-heading-row"><div>
-        <h2>{draft ? 'Kirim ke kelas' : 'Tambah ke kelas lain'}</h2>
-        <p>Hanya siswa yang sudah bergabung di kelas terpilih yang melihat simulasi ini.{draft ? ' Setelah dikirim, isi simulasi tidak bisa diedit lagi.' : ''}</p>
-      </div></div>
-      <div className="quest-classes">
-        {classOptions.map((c) => (
-          <label className="quest-class" key={c.value}><input type="checkbox" checked={picked.includes(c.value)} onChange={() => toggle(c.value)} /> {c.label}</label>
-        ))}
-      </div>
-      {draft ? (
-        <label className="quest-class"><input type="checkbox" checked={refresh} onChange={(e) => setRefresh(e.target.checked)} /> Refreshment harian: AI melanjutkan cerita tiap hari untuk setiap siswa</label>
-      ) : null}
-      {error ? <p className="field-error" role="alert">{error}</p> : null}
-      <div className="module-form-actions">
-        <button className="primary-button" type="button" onClick={send} disabled={busy || !picked.length || (draft && !quest.balance.ok)}>
-          {busy ? <Loader2 size={18} className="module-spin" /> : <Send size={18} />} {draft ? 'Kirim Simulasi' : 'Tambahkan'}
-        </button>
-        {draft && !quest.balance.ok ? <small className="field-hint">Perbaiki peringatan keseimbangan dulu.</small> : null}
-      </div>
     </section>
   );
 }
@@ -306,68 +264,36 @@ function QuestEditor({ id, classOptions, notify, onBack }: { id: number; classOp
 export function QuestPage({ notify, classOptions }: { notify: Notify; classOptions: ClassOption[] }) {
   const [topics, setTopics] = useState<{ id: number; title: string }[]>([]);
   const [list, setList] = useState<QuestSummary[] | null>(null);
-  const [topicId, setTopicId] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [chatActive, setChatActive] = useState(false);
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState<number | null>(null);
 
   const loadList = useCallback(() => questApi.mine().then(setList).catch((e) => { setList([]); setError(errText(e)); }), []);
   useEffect(() => {
-    void questApi.topics().then((t) => { setTopics(t); if (t.length) setTopicId(String(t[0].id)); });
+    void questApi.topics().then(setTopics);
     void loadList();
   }, [loadList]);
 
   if (openId !== null) return <QuestEditor id={openId} classOptions={classOptions} notify={notify} onBack={() => { setOpenId(null); void loadList(); }} />;
 
-  const create = async (event: { preventDefault: () => void }) => {
-    event.preventDefault();
-    if (busy) return;
-    setBusy(true); setError('');
-    try {
-      const quest = await questApi.createDraft(Number(topicId), prompt.trim());
-      setPrompt('');
-      notify('Draft simulasi siap. Periksa dan sesuaikan sebelum dikirim.');
-      setOpenId(quest.id);
-    } catch (e) { setError(errText(e)); } finally { setBusy(false); }
-  };
-
   const remove = async (q: QuestSummary) => {
     try { await questApi.remove(q.id); notify('Simulasi dihapus.'); await loadList(); } catch (e) { setError(errText(e)); }
   };
 
-  const promptLength = prompt.trim().length;
   return (
     <div className="page-stack">
       <section className="page-intro">
         <div>
           <span className="page-kicker">Simulasi</span>
           <h1>Buat Simulasi Keuangan</h1>
-          <p>Pilih topik dan tulis ide ceritanya. AI menyusun seluruh skenario sebagai draft. Kamu periksa, ubah angkanya, sempurnakan, lalu kirim ke kelas.</p>
+          <p>Pilih topik dan tulis ide ceritanya. Moniy menyusun kerangka untuk kamu periksa, lalu menulis simulasinya.</p>
         </div>
       </section>
 
-      <section className="surface-card">
-        <form className="module-form" onSubmit={create}>
-          <div className="field-group">Topik
-            <FormSelect label="Topik" value={topicId} options={topics.map((t) => ({ value: String(t.id), label: t.title }))} onValueChange={setTopicId} disabled={busy || !topics.length} />
-          </div>
-          <label className="field-group">Ide cerita
-            <textarea className="module-textarea" rows={4} maxLength={300} value={prompt} onChange={(e) => setPrompt(e.target.value)} disabled={busy}
-              placeholder="Contoh: siswa membuka usaha minuman boba di dekat sekolah dengan modal terbatas" />
-            <span className="field-hint">{promptLength}/300 karakter, minimal 10.</span>
-          </label>
-          {error ? <p className="field-error" role="alert">{error}</p> : null}
-          <div className="module-form-actions">
-            <button className="primary-button" type="submit" disabled={busy || !topicId || promptLength < 10}>
-              {busy ? <><Loader2 size={18} className="module-spin" /> AI sedang menyusun draft...</> : <><Wand2 size={18} /> Buat draft simulasi</>}
-            </button>
-            {busy ? <small className="field-hint">Bisa sampai beberapa menit. Jangan tutup halaman ini.</small> : null}
-          </div>
-        </form>
-      </section>
+      <QuestChat topics={topics} classOptions={classOptions} notify={notify} onOpen={setOpenId} onActiveChange={setChatActive} />
 
-      <section className="surface-card data-table-card">
+      {chatActive ? null : <section className="surface-card data-table-card">
+        {error ? <p className="field-error" role="alert">{error}</p> : null}
         <div className="section-heading-row"><div><h2>Simulasi saya</h2><p>Draft dan simulasi yang sudah dikirim ke kelas.</p></div></div>
         {list === null ? <div className="quest-list-skeleton" aria-label="Memuat simulasi"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div> : list.length ? (
           <table className="data-table">
@@ -383,7 +309,7 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
             ))}</tbody>
           </table>
         ) : <EmptyState title="Belum ada simulasi" description="Simulasi yang kamu buat akan muncul di sini." />}
-      </section>
+      </section>}
     </div>
   );
 }

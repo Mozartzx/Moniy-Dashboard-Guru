@@ -558,8 +558,6 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .quest-choice-buruk { border-color: #c0392b; }
 .quest-choice-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .quest-verdict { width: auto; padding: 8px 12px; }
-.quest-balance-ok { border-left: 6px solid #23834b; }
-.quest-balance-warn { border-left: 6px solid #d98a00; }
 .quest-warnings { margin: 0; padding-left: 20px; color: #8a5a00; font-size: var(--text-sm); }
 .quest-proposal { display: grid; gap: 10px; padding: 14px; border: 2px dashed var(--border); border-radius: 14px; }
 .quest-diff { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
@@ -577,3 +575,43 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .quest-skeleton { height: 320px; }
 .quest-list-skeleton { display: grid; gap: 10px; padding: 4px 0; }
 .quest-list-skeleton .skeleton { height: 52px; border-radius: 12px; }
+
+/* Obrolan pembuatan simulasi: tanpa bayangan, tanpa garis warna di sisi kartu, badge solid (simple-ui-rule.md) */
+.sim-chat { display: grid; gap: 14px; }
+.sim-chat-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sim-chat-top p { margin: 0; color: var(--muted); font-size: var(--text-sm); font-weight: 600; }
+.sim-thread { display: grid; gap: 14px; }
+.sim-msg-user { justify-self: end; max-width: min(620px, 100%); padding: 12px 16px; border-radius: 16px 16px 4px 16px; background: var(--navy); color: #fff; font-size: var(--text-base); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sim-msg-ai { display: grid; gap: 14px; width: 100%; max-width: 820px; padding: 18px; border: 2px solid var(--border); border-radius: 4px 16px 16px 16px; background: #fff; }
+.sim-steps { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sim-step { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: var(--text-base); line-height: 1.4; }
+.sim-step-icon { width: 20px; height: 20px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; line-height: 0; }
+.sim-step-running { color: var(--navy); font-weight: 600; }
+.sim-step-running .sim-step-icon { color: var(--blue); }
+.sim-step-done .sim-step-icon { background: var(--green); }
+.sim-step-failed { color: var(--navy); }
+.sim-step-failed .sim-step-icon { background: var(--red); }
+.sim-wait { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+.sim-skeletons { display: grid; gap: 10px; }
+.sim-skeleton { height: 78px; border-radius: 10px; }
+.sim-outline { display: grid; gap: 12px; }
+.sim-outline-head { display: grid; gap: 2px; }
+.sim-outline-head strong { font-family: var(--font-fredoka), var(--font-inter), Arial, sans-serif; font-size: var(--text-lg); font-weight: 500; letter-spacing: 0; }
+.sim-outline-head span { color: var(--muted); font-size: var(--text-sm); }
+.sim-outline ol { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.sim-item { display: grid; gap: 6px; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; }
+.sim-item-top { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sim-item p { margin: 0; font-size: var(--text-base); line-height: 1.5; }
+.sim-num { min-width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--navy); color: #fff; font-size: var(--text-xs); font-weight: 700; }
+.sim-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: var(--text-xs); font-weight: 700; }
+.sim-badge-kondisi { background: #5d6f82; color: #fff; }
+.sim-badge-kejadian, .sim-badge-warn { background: #f2b01e; color: #3a2a00; }
+.sim-badge-ok { background: var(--green); color: #fff; }
+.sim-learn { color: var(--navy); }
+.sim-learn span { display: block; margin-bottom: 2px; color: var(--muted); font-size: var(--text-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.sim-old summary { cursor: pointer; color: var(--muted); font-size: var(--text-sm); font-weight: 600; }
+.sim-old[open] summary { margin-bottom: 10px; }
+.sim-done { display: grid; gap: 12px; }
+.sim-done-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.sim-composer { position: sticky; bottom: 0; display: grid; gap: 10px; padding: 12px 0 4px; background: var(--canvas); }
+.sim-composer-actions { display: flex; flex-wrap: wrap; gap: 10px; }
