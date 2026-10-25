@@ -143,10 +143,12 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     const text = reply.trim();
     if (busy || !latestOutline || !text) return;
     // Riwayat dikirim agar jawaban singkat ("namanya Sara") dipahami sesuai pertanyaan Moniy sebelumnya.
-    const history = turns.flatMap((t) => (t.role === 'user'
-      ? [{ role: 'guru' as const, text: t.text }]
-      : t.reply ? [{ role: 'moni' as const, text: t.reply }]
-        : t.outline ? [{ role: 'moni' as const, text: `Membuat kerangka: ${t.outline.judul}` }] : [])).slice(-8);
+    const history = turns.flatMap((t): { role: 'guru' | 'moni'; text: string }[] => {
+      if (t.role === 'user') return [{ role: 'guru', text: t.text }];
+      if (t.reply) return [{ role: 'moni', text: t.reply }];
+      if (t.outline) return [{ role: 'moni', text: `Membuat kerangka: ${t.outline.judul}` }];
+      return [];
+    }).slice(-8);
     addUser(text); setReply('');
     // Moniy menentukan sendiri: pertanyaan dijawab di chat, permintaan ubah ke Planner, persetujuan langsung menulis.
     void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text, history }, on))
