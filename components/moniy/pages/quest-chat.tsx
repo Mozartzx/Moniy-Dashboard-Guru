@@ -48,13 +48,18 @@ function StepList({ steps }: { steps: StepRow[] }) {
 function OutlineView({ outline }: { outline: Outline }) {
   return (
     <div className="sim-outline">
-      <div className="sim-outline-head"><strong>{outline.judul}</strong><span>{outline.tokoh}</span></div>
+      <div className="sim-outline-head">
+        <strong>{outline.judul}</strong>
+        <span>{outline.tokoh}</span>
+        {outline.rentang ? <span>Rentang cerita: {outline.rentang}</span> : null}
+      </div>
       <ol>
         {outline.items.map((it, i) => (
           <li className="sim-item" key={i}>
             <div className="sim-item-top">
               <span className="sim-num">{i + 1}</span>
               <span className={`sim-badge sim-badge-${it.jenis}`}>{it.jenis === 'kondisi' ? 'Kondisi' : 'Kejadian acak'}</span>
+              {it.waktu ? <span className="sim-when">{it.waktu}</span> : null}
               <strong>{it.judul}</strong>
             </div>
             <p>{it.inti}</p>
@@ -65,6 +70,12 @@ function OutlineView({ outline }: { outline: Outline }) {
           </li>
         ))}
       </ol>
+      {outline.cakupan?.length ? (
+        <div className="sim-coverage">
+          <strong>Cakupan materi chapter</strong>
+          <ul>{outline.cakupan.map((c) => <li key={c.materi}>{c.materi}: skenario {c.skenario.join(', ')}</li>)}</ul>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -99,12 +110,14 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const nextId = useRef(1);
-  const endRef = useRef<HTMLDivElement>(null);
   const active = turns.length > 0;
   const topicId = pickedTopic || (topics.length ? String(topics[0].id) : '');
 
   useEffect(() => { onActiveChange(active); }, [active, onActiveChange]);
-  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [turns]);
+  const lastUserId = [...turns].reverse().find((t) => t.role === 'user')?.id;
+  useEffect(() => {
+    if (lastUserId !== undefined) document.getElementById(`sim-turn-${lastUserId}`)?.scrollIntoView({ block: 'start' });
+  }, [lastUserId]);
   useEffect(() => {
     if (!busy) return;
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
@@ -148,7 +161,7 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   };
   const revise = () => {
     const text = reply.trim();
-    if (!latestOutline || !text) return;
+    if (busy || !latestOutline || !text) return;
     addUser(text); setReply('');
     // Moniy menentukan sendiri: pertanyaan dijawab di chat, permintaan ubah ke Planner, persetujuan langsung menulis.
     void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text }, on))
@@ -170,8 +183,9 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
             <FormSelect label="Topik" value={topicId} options={topics.map((t) => ({ value: String(t.id), label: t.title }))} onValueChange={setPickedTopic} disabled={!topics.length} />
           </div>
           <label className="field-group">Ide cerita
-            <textarea className="module-textarea" rows={4} maxLength={300} value={idea} onChange={(e) => setIdea(e.target.value)} placeholder={`Contoh: ${exampleFor(topicLabel)}`} />
-            <span className="field-hint">Tulis tokoh, dilema utama, dan konsep yang ingin diajarkan. {len}/300, minimal 10 karakter.</span>
+            <textarea className="module-textarea" rows={4} maxLength={300} value={idea} onChange={(e) => setIdea(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (topicId && idea.trim().length >= 10) start(); } }} placeholder={`Contoh: ${exampleFor(topicLabel)}`} />
+            <span className="field-hint">Tulis tokoh, dilema utama, rentang waktu, dan konsep yang ingin diajarkan. {len}/300, minimal 10 karakter. Enter untuk kirim, Shift+Enter untuk baris baru.</span>
           </label>
           <div className="module-form-actions">
             <button className="primary-button" type="submit" disabled={!topicId || len < 10}><Send size={18} /> Buat kerangka</button>
@@ -189,7 +203,7 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
       </div>
       <div className="sim-thread">
         {turns.map((t) => {
-          if (t.role === 'user') return <div className="sim-msg sim-msg-user" key={t.id}>{t.text}</div>;
+          if (t.role === 'user') return <div className="sim-msg sim-msg-user" id={`sim-turn-${t.id}`} key={t.id}>{t.text}</div>;
           const isLatest = t.outline && t.outline === latestOutline;
           return (
             <div className="sim-msg sim-msg-ai" key={t.id}>
@@ -203,13 +217,13 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
       {finished ? (
         <div><button className="secondary-button" type="button" onClick={reset}>Buat simulasi baru</button></div>
       ) : (
         <div className="sim-composer">
           <textarea className="module-textarea" rows={2} maxLength={400} value={reply} disabled={busy || !latestOutline} onChange={(e) => setReply(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); revise(); } }}
             aria-label="Pesan untuk Moniy" placeholder="Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan." />
           <div className="sim-composer-actions">
             <button className="secondary-button" type="button" onClick={revise} disabled={busy || !latestOutline || reply.trim().length < 3}><Send size={16} /> Kirim</button>

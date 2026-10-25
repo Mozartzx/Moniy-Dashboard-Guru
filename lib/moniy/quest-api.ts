@@ -24,8 +24,8 @@ export type RefreshOverview = {
   students: { userId: number; name: string; classId: string; started: boolean; refreshDays: number; lastRefreshDate: string | null; cash: number | null; day: number | null; phase: string | null }[];
 };
 
-export type OutlineItem = { jenis: 'kondisi' | 'kejadian'; judul: string; inti: string; belajar: string[] };
-export type Outline = { judul: string; tokoh: string; items: OutlineItem[] };
+export type OutlineItem = { jenis: 'kondisi' | 'kejadian'; waktu?: string; judul: string; inti: string; belajar: string[] };
+export type Outline = { judul: string; tokoh: string; rentang?: string; items: OutlineItem[]; cakupan?: { materi: string; skenario: number[] }[] };
 
 export type StreamEvent =
   | { type: 'step'; key: string; label: string; status: 'running' | 'done' | 'failed' }

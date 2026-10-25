@@ -125,7 +125,7 @@ function ScenarioEditor({ questId, step, locked, onSaved, notify }: {
             <NumberField label="Kas sekali jalan" value={c.cash} disabled={locked} onChange={(v) => setChoice(i, { cash: v })} hint={`${c.cash >= 0 ? 'Menambah' : 'Mengurangi'} kas ${rupiah(Math.abs(c.cash))}`} />
             <NumberField label="Pemasukan harian" value={c.income} step={5_000} disabled={locked} onChange={(v) => setChoice(i, { income: v })} />
             <NumberField label="Pengeluaran harian" value={c.cost} step={5_000} disabled={locked} onChange={(v) => setChoice(i, { cost: v })} />
-            <NumberField label="Hari berjalan" value={c.days} step={1} disabled={locked} onChange={(v) => setChoice(i, { days: Math.min(30, Math.max(1, v)) })} hint="1 sampai 30 hari" />
+            <NumberField label="Hari berjalan" value={c.days} step={1} disabled={locked} onChange={(v) => setChoice(i, { days: Math.min(730, Math.max(1, v)) })} hint="1 sampai 730 hari" />
           </div>
         </div>
       ))}
