@@ -159,7 +159,7 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .metric-card { min-height: 117px; display: flex; align-items: flex-start; gap: 13px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
 .metric-icon, .card-icon, .solid-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 13px; color: #fff; line-height: 0; }
-.metric-icon svg, .card-icon svg, .solid-icon svg, .insight-icon svg, .decision-dot svg, .business-visual span svg, .error-state > span svg, .empty-state-icon svg { display: block; stroke-width: 2.25; }
+.metric-icon svg, .card-icon svg, .solid-icon svg, .decision-dot svg, .business-visual span svg, .error-state > span svg, .empty-state-icon svg { display: block; stroke-width: 2.25; }
 .metric-card p, .metric-card strong, .metric-card span:not(.metric-icon) { display: block; }
 .metric-card p { margin: 0; color: #718397; font-size: var(--text-sm); font-weight: 700; }
 .metric-card strong { margin-top: 5px; font-size: var(--text-2xl); letter-spacing: -.03em; }
@@ -183,16 +183,7 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .topic-progress-meta b { color: var(--blue-strong); font-size: var(--text-sm); }
 .thin-progress { height: 8px; overflow: hidden; border-radius: 999px; background: #e9f0f6; }
 .thin-progress span { display: block; width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1b6fe8, #55bdf0); transform-origin: left; transition: transform .5s ease; }
-.insight-card { display: flex; flex-direction: column; background: linear-gradient(155deg, #f6fbff 0%, #fff 65%); }
-.insight-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.insight-icon { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 13px; color: #fff; background: var(--blue); box-shadow: 0 4px 0 #0b4eac; }
 .ai-label { padding: 6px 9px; color: #fff; background: #1768e5; font-size: var(--text-sm); }
-.insight-card h2 { margin-top: 18px; }
-.insight-card > p { font-size: var(--text-base); line-height: 1.65; }
-.insight-focus { display: flex; gap: 9px; margin: 16px 0; padding: 11px; border-radius: 12px; color: #66501e; background: #fff7e5; font-size: var(--text-sm); line-height: 1.5; }
-.insight-focus svg { flex: 0 0 auto; color: #e18a13; }
-.insight-card .secondary-button { width: 100%; margin-top: auto; }
-.insight-card > small { margin-top: 12px; color: #8996a4; font-size: var(--text-xs); line-height: 1.45; }
 .compact-card { min-height: 190px; }
 .risk-level { display: inline-flex; align-items: center; justify-content: center; min-height: 27px; padding: 0 10px; border-radius: 999px; font-size: var(--text-sm); font-weight: 700; }
 .risk-sedang { color: #fff; background: #b86400; }
@@ -624,7 +615,6 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .dashboard-shell-focus .dashboard-workspace { grid-column: 1; }
 .dashboard-shell-focus .dashboard-main { width: min(960px, 100%); }
 .topbar-focus { min-height: 64px; }
-.focus-logo-link { display: flex; align-items: center; border-radius: 8px; }
 .topbar-focus .profile-trigger > span:nth-child(2), .topbar-focus .profile-trigger > svg { display: none; }
 .sim-reply { margin: 0; font-size: var(--text-base); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sim-msg-user { scroll-margin-top: 84px; }
@@ -671,3 +661,29 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .sim-choices li { display: flex; align-items: flex-start; gap: 10px; }
 .sim-choices li > div { display: grid; gap: 2px; min-width: 0; }
 .sim-choices small { color: var(--muted); font-size: var(--text-xs); }
+/* Edit langsung di tempat: teks bisa diketik di posisinya, tanpa kotak isian */
+.sim-step-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sim-step-q { flex: 1; min-width: 140px; }
+.sim-step-body { padding: 8px 0 0 4px; }
+.sim-edit-actions { display: flex; gap: 6px; margin-left: auto; }
+.sim-icon-ok { border-color: var(--green); background: var(--green); color: #fff; }
+.sim-bg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sim-editable { border-radius: 4px; outline: 2px dashed var(--blue); outline-offset: 2px; }
+.sim-editable:focus { outline: 2px solid var(--blue); }
+.sim-editable-num { display: inline-block; min-width: 2ch; }
+.overview-grid.overview-single { grid-template-columns: 1fr; }
+/* Kartu skenario: seluruh kepala kartu bisa diklik lewat tombol selubung; teks dan tombol di atasnya mengikuti */
+.sim-step-head { position: relative; }
+.sim-step-toggle { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
+.sim-step-head > :not(.sim-step-toggle) { position: relative; pointer-events: none; }
+.sim-step-head .sim-edit-actions, .sim-step-head .sim-editable { pointer-events: auto; }
+.sim-step-chevron { display: inline-flex; color: var(--muted); }
+.quest-class-done { color: var(--muted); }
+.quest-class-done small { font-size: var(--text-xs); }
+.sim-outline-note { margin: 0 0 12px; }
+/* Chip status di tabel: selalu inline dan solid (aturan tabel membuat span menjadi block) */
+.data-table td .status-chip { display: inline-flex; }
+.sim-status { padding: 0 12px; background: #5d6f82; color: #fff; }
+.sim-status.status-done { background: #23834b; }
+/* Teks yang sedang diedit tidak ikut gaya label "Yang dipelajari siswa" */
+.sim-learn li .sim-editable { display: inline; margin: 0; color: inherit; font-size: inherit; font-weight: 400; letter-spacing: normal; text-transform: none; }

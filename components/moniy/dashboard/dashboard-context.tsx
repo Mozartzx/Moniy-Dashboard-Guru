@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMoniyDashboard } from '@/hooks/use-moniy-dashboard';
 import { periodOptions } from '@/lib/moniy/period';
 import { getCurrentTeacher, getMyClasses } from '@/lib/moniy/session';
@@ -19,7 +19,9 @@ type DashboardContextValue = {
   reviewCommunityPost: (postId: string) => Promise<void>;
   /** Mode fokus: sidebar dan kontrol topbar disembunyikan, hanya logo dan profil. */
   focusMode: boolean;
-  setFocusMode: (value: boolean) => void;
+  /** Aksi tombol Kembali di mode fokus (menggantikan logo). */
+  focusBack: (() => void) | null;
+  setFocusMode: (value: boolean, onBack?: () => void) => void;
 };
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -29,7 +31,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [teacher, setTeacher] = useState<TeacherProfile | null>(null);
   const dashboard = useMoniyDashboard(classes.map((item) => item.id));
   const [toast, setToast] = useState('');
-  const [focusMode, setFocusMode] = useState(false);
+  const [focus, setFocus] = useState<{ on: boolean; back: (() => void) | null }>({ on: false, back: null });
+  const setFocusMode = useCallback((on: boolean, back?: () => void) => setFocus({ on, back: back ?? null }), []);
   const toastTimer = useRef<number | null>(null);
 
   const reloadSession = async () => {
@@ -69,7 +72,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       await dashboard.markPostReviewed(postId);
       notify('Postingan ditandai sudah ditinjau.');
     },
-    focusMode,
+    focusMode: focus.on,
+    focusBack: focus.back,
     setFocusMode,
   };
 

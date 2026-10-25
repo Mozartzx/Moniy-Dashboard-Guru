@@ -71,8 +71,21 @@ function SplitLayout({ chat, panel, open, narrow }: { chat: ReactNode; panel: Re
   );
 }
 
-export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange }: {
-  topics: Topic[]; classOptions: ClassOption[]; notify: Notify; onOpen: (id: number) => void; onActiveChange: (active: boolean) => void;
+/** Riwayat chat dan kerangka disimpan di browser per simulasi, supaya terlihat lagi saat simulasi dibuka dari daftar. */
+const storeKey = (questId: number) => `moniy.sim.chat.${questId}`;
+function loadSaved(questId: number): Turn[] {
+  try {
+    const raw = window.localStorage.getItem(storeKey(questId));
+    const saved = raw ? (JSON.parse(raw) as { turns?: Turn[] }).turns : undefined;
+    return Array.isArray(saved) ? saved.map((t) => (t.role === 'ai' ? { ...t, running: false } : t)) : [];
+  } catch { return []; }
+}
+function saveTurns(questId: number, turns: Turn[]) {
+  try { window.localStorage.setItem(storeKey(questId), JSON.stringify({ v: 1, turns })); } catch { /* penyimpanan penuh atau diblokir: riwayat tidak tersimpan */ }
+}
+
+export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChange, onResumeFailed }: {
+  topics: Topic[]; classOptions: ClassOption[]; notify: Notify; resumeId: number | null; onActiveChange: (active: boolean) => void; onResumeFailed: (message: string) => void;
 }) {
   const [pickedTopic, setPickedTopic] = useState('');
   const [idea, setIdea] = useState('');
@@ -82,12 +95,39 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   const [panelOpen, setPanelOpen] = useState(false);
   const [pickedVersion, setPickedVersion] = useState<number | null>(null);
   const [view, setView] = useState<'kerangka' | 'simulasi'>('kerangka');
+  const [resuming, setResuming] = useState(resumeId !== null);
+  const [resumeTopic, setResumeTopic] = useState('');
   const narrow = useNarrow();
   const nextId = useRef(1);
   const active = turns.length > 0;
   const topicId = pickedTopic || (topics.length ? String(topics[0].id) : '');
 
-  useEffect(() => { onActiveChange(active); }, [active, onActiveChange]);
+  // Membuka draft atau simulasi yang sudah ada: panel langsung menampilkan simulasinya, chat tetap bisa dipakai bertanya.
+  useEffect(() => {
+    if (resumeId === null) return;
+    let live = true;
+    void questApi.get(resumeId).then((q) => {
+      if (!live) return;
+      const info: DoneInfo = { questId: q.id, title: q.title, balanceOk: q.balance.ok, warnings: q.balance.warnings };
+      setResumeTopic(q.topic ?? '');
+      const saved = loadSaved(resumeId);
+      if (saved.length) {
+        nextId.current = Math.max(...saved.map((t) => t.id)) + 1;
+        setTurns(saved);
+      } else {
+        setTurns([{
+          id: nextId.current++, role: 'ai', stage: 'simulasi', steps: [], running: false, done: info,
+          reply: q.status === 'draft'
+            ? 'Draft dibuka. Kamu bisa bertanya di sini, atau mengedit langsung di panel kanan lewat ikon pensil.'
+            : 'Simulasi ini sudah dikirim ke kelas. Kamu bisa bertanya tentang isinya di sini.',
+        }]);
+      }
+      setView('simulasi'); setPanelOpen(true); setResuming(false);
+    }).catch((err) => { if (live) { setResuming(false); onResumeFailed(`Simulasi tidak bisa dibuka. ${errText(err)}`); } });
+    return () => { live = false; };
+  }, [resumeId, onResumeFailed]);
+
+  useEffect(() => { onActiveChange(active || resuming); }, [active, resuming, onActiveChange]);
   const lastUserId = [...turns].reverse().find((t) => t.role === 'user')?.id;
   useEffect(() => {
     if (lastUserId !== undefined) document.getElementById(`sim-turn-${lastUserId}`)?.scrollIntoView({ block: 'start' });
@@ -104,7 +144,8 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   const latestOutline = versions[versions.length - 1];
   const shownVersion = Math.min(pickedVersion ?? versions.length - 1, versions.length - 1);
   const doneInfo = aiTurns.find((t) => t.done)?.done ?? null;
-  const topicLabel = topics.find((t) => String(t.id) === topicId)?.title ?? '';
+  useEffect(() => { if (doneInfo && !busy) saveTurns(doneInfo.questId, turns); }, [turns, doneInfo, busy]);
+  const topicLabel = resumeId !== null ? resumeTopic : (topics.find((t) => String(t.id) === topicId)?.title ?? '');
 
   const run = async (stage: 'kerangka' | 'simulasi', go: (onEvent: (e: StreamEvent) => void) => Promise<void>) => {
     const id = nextId.current++;
@@ -141,7 +182,7 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   };
   const revise = () => {
     const text = reply.trim();
-    if (busy || !latestOutline || !text) return;
+    if (busy || !text || (!latestOutline && !doneInfo)) return;
     // Riwayat dikirim agar jawaban singkat ("namanya Sara") dipahami sesuai pertanyaan Moniy sebelumnya.
     const history = turns.flatMap((t): { role: 'guru' | 'moni'; text: string }[] => {
       if (t.role === 'user') return [{ role: 'guru', text: t.text }];
@@ -150,7 +191,11 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
       return [];
     }).slice(-8);
     addUser(text); setReply('');
-    // Moniy menentukan sendiri: pertanyaan dijawab di chat, permintaan ubah ke Planner, persetujuan langsung menulis.
+    // Setelah simulasi jadi, chat hanya untuk bertanya; sebelum itu Moniy menentukan sendiri: tanya, revisi kerangka, atau setuju.
+    if (doneInfo) {
+      void run('kerangka', (on) => questApi.outlineStream({ questId: doneInfo.questId, instruction: text, history }, on));
+      return;
+    }
     void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text, history }, on))
       .then((wantsApprove) => { if (wantsApprove) approve(); });
   };
@@ -159,9 +204,15 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     addUser('Kerangka disetujui. Buat simulasinya.');
     void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline }, on));
   };
-  const reset = () => { setTurns([]); setReply(''); setPanelOpen(false); setPickedVersion(null); setView('kerangka'); };
+  // Kerangka terbaru bisa diedit langsung di panel; hasilnya menggantikan versi itu (bukan versi baru).
+  const editOutline = (next: Outline) => setTurns((prev) => {
+    const last = prev.map((t, i) => (t.role === 'ai' && t.outline ? i : -1)).filter((i) => i >= 0).pop();
+    return prev.map((t, i) => (i === last && t.role === 'ai' ? { ...t, outline: next } : t));
+  });
   const showVersion = (i: number) => { setPickedVersion(i); setView('kerangka'); setPanelOpen(true); };
   const showSimulasi = () => { setView('simulasi'); setPanelOpen(true); };
+
+  if (resuming && !active) return <div className="skeleton quest-skeleton" aria-label="Membuka simulasi" />;
 
   if (!active) {
     const len = idea.trim().length;
@@ -218,7 +269,7 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
               {t.error ? <p className="field-error" role="alert">{t.error}</p> : null}
               {t.done ? (
                 <div className="sim-result">
-                  <div><strong>Simulasi siap</strong><span>{t.done.title}</span></div>
+                  <div><strong>Simulasi {t.steps.length ? 'siap' : 'dibuka'}</strong><span>{t.done.title}</span></div>
                   <span className={`sim-badge ${t.done.balanceOk ? 'sim-badge-ok' : 'sim-badge-warn'}`}>{t.done.balanceOk ? 'Seimbang' : 'Perlu diperbaiki'}</span>
                   <button className="secondary-button" type="button" onClick={showSimulasi}>Lihat di panel</button>
                 </div>
@@ -227,25 +278,22 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
           );
         })}
       </div>
-      {doneInfo ? (
-        <div className="sim-composer"><button className="secondary-button" type="button" onClick={reset}>Buat simulasi baru</button></div>
-      ) : (
-        <div className="sim-composer">
-          <textarea className="module-textarea" rows={2} maxLength={400} value={reply} disabled={busy || !latestOutline} onChange={(e) => setReply(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); revise(); } }}
-            aria-label="Pesan untuk Moniy" placeholder="Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan." />
-          <div className="sim-composer-actions">
-            <button className="secondary-button" type="button" onClick={revise} disabled={busy || !latestOutline || reply.trim().length < 3}><Send size={16} /> Kirim</button>
-            <button className="primary-button" type="button" onClick={approve} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>
-          </div>
+      <div className="sim-composer">
+        <textarea className="module-textarea" rows={2} maxLength={400} value={reply} disabled={busy || (!latestOutline && !doneInfo)} onChange={(e) => setReply(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); revise(); } }}
+          aria-label="Pesan untuk Moniy"
+          placeholder={doneInfo ? 'Tanya Moniy tentang simulasi ini. Untuk mengubah isi, klik ikon pensil di panel.' : 'Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan.'} />
+        <div className="sim-composer-actions">
+          <button className="secondary-button" type="button" onClick={revise} disabled={busy || (!latestOutline && !doneInfo) || reply.trim().length < 2}><Send size={16} /> Kirim</button>
+          {doneInfo ? null : <button className="primary-button" type="button" onClick={approve} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>}
         </div>
-      )}
+      </div>
     </div>
   );
 
   const panel = (
-    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} view={view} onView={setView} done={doneInfo}
-      classOptions={classOptions} notify={notify} onOpen={onOpen} onClose={() => setPanelOpen(false)} />
+    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} onEditOutline={editOutline} view={view} onView={setView} done={doneInfo}
+      classOptions={classOptions} notify={notify} onClose={() => setPanelOpen(false)} />
   );
 
   return <SplitLayout chat={chat} panel={panel} open={panelOpen && hasPanelContent} narrow={narrow} />;

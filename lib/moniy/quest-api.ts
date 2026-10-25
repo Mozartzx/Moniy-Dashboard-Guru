@@ -3,7 +3,9 @@ import { createClient } from '@/lib/supabase/client';
 // Quest dibuat lewat backend Moniy (NestJS), bukan langsung ke Supabase: backend yang
 // memegang kunci AI, aturan keseimbangan, dan pengecekan guru terverifikasi.
 // Default ke API VPS (app.moniy.site): backend itu di-deploy langsung dan mendukung streaming; Vercel hanya berubah saat main aplikasi digabung.
-const API_BASE = (process.env.NEXT_PUBLIC_MONIY_API_URL ?? 'https://app.moniy.site/api').replace(/\/$/, '');
+const REMOTE_API = (process.env.NEXT_PUBLIC_MONIY_API_URL ?? 'https://app.moniy.site/api').replace(/\/$/, '');
+// Di localhost panggilan lewat proxy dev (/moniy-api) karena CORS API hanya mengizinkan moniy.site.
+const apiBase = () => (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? '/moniy-api' : REMOTE_API);
 
 export type Verdict = 'cerdas' | 'biasa' | 'buruk';
 
@@ -49,7 +51,7 @@ async function stream(path: string, body: unknown, onEvent: (e: StreamEvent) => 
   if (!session) throw new QuestApiError('Sesi berakhir. Masuk lagi.', 401);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(`${apiBase()}${path}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -87,7 +89,7 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   if (!session) throw new QuestApiError('Sesi berakhir. Masuk lagi.', 401);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(`${apiBase()}${path}`, {
       method,
       headers: { Authorization: `Bearer ${session.access_token}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -110,7 +112,7 @@ export const questApi = {
   },
   mine: () => call<QuestSummary[]>('GET', '/quest/mine'),
   get: (id: number) => call<Quest>('GET', `/quest/${id}`),
-  outlineStream: (body: { topicId: number; prompt: string; outline?: Outline; instruction?: string; history?: { role: 'guru' | 'moni'; text: string }[] }, onEvent: (e: StreamEvent) => void) =>
+  outlineStream: (body: { topicId?: number; prompt?: string; questId?: number; outline?: Outline; instruction?: string; history?: { role: 'guru' | 'moni'; text: string }[] }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/outline/stream', body, onEvent),
   draftStream: (body: { topicId: number; prompt: string; outline: Outline }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/drafts/stream', body, onEvent),

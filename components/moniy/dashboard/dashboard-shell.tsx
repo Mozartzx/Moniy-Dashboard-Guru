@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
+  ArrowLeft,
   BookOpenCheck,
   ArrowLeftRight,
   ChevronDown,
@@ -38,7 +39,7 @@ function LoadingState() {
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const currentRoute = getDashboardRoute(pathname);
-  const { dashboard, className, classOptions, activeClass, teacher, reloadSession, toast, notify, focusMode } = useDashboardContext();
+  const { dashboard, className, classOptions, activeClass, teacher, reloadSession, toast, notify, focusMode, focusBack } = useDashboardContext();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
@@ -96,9 +97,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <section className="dashboard-workspace">
         <header className={`dashboard-topbar ${focusMode ? 'topbar-focus' : ''}`}>
           {focusMode ? (
-            <BrowserNavigationLink href="/dashboard/ringkasan" className="focus-logo-link" aria-label="Moniy, ke ringkasan dashboard">
-              <Image src="/assets/moniy-logo.png" alt="" width={120} height={35} priority />
-            </BrowserNavigationLink>
+            <button className="secondary-button focus-back" type="button" onClick={focusBack ?? undefined}><ArrowLeft size={18} /> Kembali</button>
           ) : <div className="topbar-title">
             <button className="mobile-menu" onClick={() => setMobileNavOpen(true)} aria-label="Buka menu"><Menu size={22} /></button>
             <div>

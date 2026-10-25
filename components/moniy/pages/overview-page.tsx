@@ -3,14 +3,11 @@
 import {
   ArrowRight,
   BookOpenCheck,
-  BrainCircuit,
   ChevronRight,
   GraduationCap,
   HandHeart,
-  Lightbulb,
   ShieldQuestion,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
@@ -18,7 +15,6 @@ import { EmptyState } from './page-primitives';
 
 export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSnapshot; teacherName?: string }) {
   const pendingPosts = snapshot.communityPosts.filter((post) => !post.reviewed).slice(0, 2);
-  const weakTopic = [...snapshot.topics].sort((a, b) => a.correctRate - b.correctRate)[0];
   const firstName = teacherName?.split(' ')[0];
   const metrics = [
     { label: 'Nilai rata-rata', value: snapshot.averageScore.toFixed(1), helper: 'Rata-rata nilai kuis & modul kelas', icon: GraduationCap, tone: 'blue' },
@@ -45,19 +41,12 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
         })}
       </section>
 
-      <section className="overview-grid">
+      <section className="overview-grid overview-single">
         <article className="surface-card topic-overview-card">
           <div className="section-heading-row"><div><h2>Progres per topik</h2><p>Lihat tingkat penyelesaian dan penguasaan kelas.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/progres-belajar">Buka detail <ChevronRight size={17} /></BrowserNavigationLink></div>
           {snapshot.topics.length ? <div className="topic-progress-list">{snapshot.topics.map((topic) => <div className="topic-progress-row" key={topic.id}><div className="topic-progress-meta"><div><strong>{topic.name}</strong><span>{topic.completed} siswa selesai</span></div><b>{topic.correctRate}% benar</b></div><div className="thin-progress" aria-label={`${topic.correctRate}% keputusan benar`}><span style={{ transform: `scaleX(${topic.correctRate / 100})` }} /></div></div>)}</div> : <EmptyState title="Belum ada progres" description="Data topik akan muncul setelah siswa memulai modul." />}
         </article>
 
-        <article className="surface-card insight-card">
-          <div className="insight-topline"><span className="insight-icon"><BrainCircuit size={23} /></span><span className="ai-label"><Sparkles size={14} /> Dibantu AI</span></div>
-          <h2>Pola pemahaman kelas</h2><p>{snapshot.insight}</p>
-          {weakTopic ? <div className="insight-focus"><Lightbulb size={18} /><span><strong>Fokus berikutnya:</strong> {weakTopic.commonMistake}.</span></div> : null}
-          <BrowserNavigationLink className="secondary-button" href="/dashboard/progres-belajar">Lihat saran tindak lanjut</BrowserNavigationLink>
-          <small>Rekomendasi ini membantu guru. Keputusan pembelajaran tetap ditentukan oleh guru.</small>
-        </article>
       </section>
 
       <section className="overview-grid lower-overview-grid">

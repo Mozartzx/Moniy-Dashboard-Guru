@@ -7,7 +7,7 @@ import { errText, questApi, type Quest } from '@/lib/moniy/quest-api';
 type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
 
-export function SendPanel({ quest, classOptions, onDone, notify }: { quest: Quest; classOptions: ClassOption[]; onDone: () => Promise<void>; notify: Notify }) {
+export function SendPanel({ quest, classOptions, assigned, onDone, notify }: { quest: Quest; classOptions: ClassOption[]; assigned: string[]; onDone: () => Promise<void>; notify: Notify }) {
   const [picked, setPicked] = useState<string[]>([]);
   const [refresh, setRefresh] = useState(quest.refreshEnabled);
   const [busy, setBusy] = useState(false);
@@ -32,7 +32,10 @@ export function SendPanel({ quest, classOptions, onDone, notify }: { quest: Ques
         <p>Hanya siswa yang sudah bergabung di kelas terpilih yang melihat simulasi ini.{draft ? ' Setelah dikirim, isi simulasi tidak bisa diedit lagi.' : ''}</p>
       </div></div>
       <div className="quest-classes">
-        {classOptions.map((c) => (
+        {classOptions.map((c) => assigned.includes(c.value) ? (
+          // Kelas yang sudah menerima simulasi ini: dicoret dan tidak bisa dipilih lagi.
+          <label className="quest-class quest-class-done" key={c.value}><input type="checkbox" checked disabled /> <s>{c.label}</s> <small>sudah dikirim</small></label>
+        ) : (
           <label className="quest-class" key={c.value}><input type="checkbox" checked={picked.includes(c.value)} onChange={() => toggle(c.value)} /> {c.label}</label>
         ))}
       </div>
