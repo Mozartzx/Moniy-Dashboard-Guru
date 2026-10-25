@@ -571,3 +571,9 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .class-qr svg { width: min(260px, 70vw); height: auto; border: 2px solid var(--border); border-radius: 14px; }
 .class-qr-code { font-size: var(--text-lg, 18px); letter-spacing: .08em; color: var(--navy); }
 .class-qr-button { margin-top: 8px; width: 100%; min-height: 38px; }
+.form-select-trigger { width: 100%; height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 14px !important; border: 2px solid #d7e5f0 !important; border-radius: 14px !important; color: var(--navy); background: #fff !important; font-size: var(--text-base); font-weight: 600; box-shadow: 0 3px 0 #d7e5f0; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.form-select-trigger:hover, .form-select-trigger[data-popup-open] { border-color: #9cc4ef !important; box-shadow: 0 3px 0 #9cc4ef; }
+.form-select-trigger:disabled { opacity: .6; }
+.quest-skeleton { height: 320px; }
+.quest-list-skeleton { display: grid; gap: 10px; padding: 4px 0; }
+.quest-list-skeleton .skeleton { height: 52px; border-radius: 12px; }

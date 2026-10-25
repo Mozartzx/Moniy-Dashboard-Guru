@@ -23,7 +23,7 @@ export const dashboardRoutes: DashboardRoute[] = [
   { href: '/dashboard/rekam-siswa', label: 'Rekam Siswa', title: 'Rekam siswa', icon: UsersRound },
   { href: '/dashboard/peringatan-judi', label: 'Peringatan Judi', title: 'Peringatan judi online', icon: ShieldAlert },
   { href: '/dashboard/komunitas-kelas', label: 'Komunitas Kelas', title: 'Komunitas kelas', icon: MessagesSquare, showsCommunityBadge: true },
-  { href: '/dashboard/quest', label: 'Quest', title: 'Moniy Quest', icon: Wand2 },
+  { href: '/dashboard/quest', label: 'Simulasi', title: 'Simulasi Keuangan', icon: Wand2 },
   { href: '/dashboard/laporan', label: 'Laporan', title: 'Laporan kelas', icon: FileText },
 ];
 

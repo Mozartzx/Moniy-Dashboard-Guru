@@ -7,6 +7,7 @@ import {
   type Background, type Balance, type Choice, type Proposal, type Quest, type QuestSummary, type RefreshOverview, type Step,
 } from '@/lib/moniy/quest-api';
 import { EmptyState } from './page-primitives';
+import { FormSelect } from './form-select';
 
 type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
@@ -31,7 +32,7 @@ function BalancePanel({ balance }: { balance: Balance }) {
   return (
     <section className={`surface-card quest-balance ${balance.ok ? 'quest-balance-ok' : 'quest-balance-warn'}`}>
       <div className="section-heading-row"><div>
-        <h2>{balance.ok ? 'Quest seimbang' : 'Perlu diperbaiki sebelum dikirim'}</h2>
+        <h2>{balance.ok ? 'Simulasi seimbang' : 'Perlu diperbaiki sebelum dikirim'}</h2>
         <p>Kas awal {rupiah(balance.startCash)}. Jalur cerdas berakhir {rupiah(balance.best)}, jalur buruk {rupiah(balance.worst)}. Target siswa: {balance.goal === null ? '-' : rupiah(balance.goal)}.</p>
       </div></div>
       {balance.warnings.length ? <ul className="quest-warnings">{balance.warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null}
@@ -115,9 +116,7 @@ function ScenarioEditor({ questId, step, locked, onSaved, notify }: {
         <div className={`quest-choice quest-choice-${c.verdict}`} key={i}>
           <div className="quest-choice-head">
             <strong>Pilihan {i + 1}</strong>
-            <select className="module-select quest-verdict" value={c.verdict} disabled={locked} onChange={(e) => setChoice(i, { verdict: e.target.value as Choice['verdict'] })}>
-              {Object.entries(VERDICT_LABEL).map(([v, l]) => <option value={v} key={v}>{l}</option>)}
-            </select>
+            <FormSelect label="Nilai pilihan" className="quest-verdict" value={c.verdict} options={Object.entries(VERDICT_LABEL).map(([v, l]) => ({ value: v, label: l }))} disabled={locked} onValueChange={(v) => setChoice(i, { verdict: v as Choice['verdict'] })} />
           </div>
           <input className="module-select" maxLength={200} value={c.label} disabled={locked} aria-label="Teks pilihan" onChange={(e) => setChoice(i, { label: e.target.value })} />
           <textarea className="module-textarea" rows={2} maxLength={400} value={c.consequence} disabled={locked} aria-label="Akibat pilihan" onChange={(e) => setChoice(i, { consequence: e.target.value })} />
@@ -205,7 +204,7 @@ function SendPanel({ quest, classOptions, onDone, notify }: { quest: Quest; clas
       if (draft) await questApi.publish(quest.id, picked, refresh); else await questApi.assign(quest.id, picked);
       setPicked([]);
       await onDone();
-      notify(draft ? 'Quest dikirim ke kelas.' : 'Quest ditambahkan ke kelas.');
+      notify(draft ? 'Simulasi dikirim ke kelas.' : 'Simulasi ditambahkan ke kelas.');
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   };
 
@@ -213,7 +212,7 @@ function SendPanel({ quest, classOptions, onDone, notify }: { quest: Quest; clas
     <section className="surface-card module-form">
       <div className="section-heading-row"><div>
         <h2>{draft ? 'Kirim ke kelas' : 'Tambah ke kelas lain'}</h2>
-        <p>Hanya siswa yang sudah bergabung di kelas terpilih yang melihat Quest ini.{draft ? ' Setelah dikirim, isi Quest tidak bisa diedit lagi.' : ''}</p>
+        <p>Hanya siswa yang sudah bergabung di kelas terpilih yang melihat simulasi ini.{draft ? ' Setelah dikirim, isi simulasi tidak bisa diedit lagi.' : ''}</p>
       </div></div>
       <div className="quest-classes">
         {classOptions.map((c) => (
@@ -226,7 +225,7 @@ function SendPanel({ quest, classOptions, onDone, notify }: { quest: Quest; clas
       {error ? <p className="field-error" role="alert">{error}</p> : null}
       <div className="module-form-actions">
         <button className="primary-button" type="button" onClick={send} disabled={busy || !picked.length || (draft && !quest.balance.ok)}>
-          {busy ? <Loader2 size={18} className="module-spin" /> : <Send size={18} />} {draft ? 'Kirim Quest' : 'Tambahkan'}
+          {busy ? <Loader2 size={18} className="module-spin" /> : <Send size={18} />} {draft ? 'Kirim Simulasi' : 'Tambahkan'}
         </button>
         {draft && !quest.balance.ok ? <small className="field-hint">Perbaiki peringatan keseimbangan dulu.</small> : null}
       </div>
@@ -263,7 +262,7 @@ function RefreshPanel({ quest, onChanged, notify }: { quest: Quest; onChanged: (
             <tr key={s.userId}><td><strong>{s.name}</strong></td><td>{s.started ? (s.phase ?? 'Berjalan') : 'Belum mulai'}</td><td>{s.refreshDays}</td><td>{s.lastRefreshDate ?? '-'}</td><td>{s.cash === null ? '-' : rupiah(s.cash)}</td></tr>
           ))}</tbody>
         </table>
-      ) : <EmptyState title="Belum ada siswa" description="Siswa muncul di sini setelah bergabung ke kelas yang menerima Quest ini." />}
+      ) : <EmptyState title="Belum ada siswa" description="Siswa muncul di sini setelah bergabung ke kelas yang menerima simulasi ini." />}
     </section>
   );
 }
@@ -280,14 +279,14 @@ function QuestEditor({ id, classOptions, notify, onBack }: { id: number; classOp
   }, [reload]);
 
   if (error) return <div className="page-stack"><button className="secondary-button" onClick={onBack}><ArrowLeft size={16} /> Kembali</button><p className="field-error">{error}</p></div>;
-  if (!quest) return <div className="page-stack"><p className="field-hint"><Loader2 size={16} className="module-spin" /> Memuat Quest...</p></div>;
+  if (!quest) return <div className="page-stack"><div className="skeleton quest-skeleton" aria-label="Memuat simulasi" /></div>;
   const locked = quest.status !== 'draft';
 
   return (
     <div className="page-stack">
       <section className="page-intro">
         <div>
-          <button className="secondary-button" type="button" onClick={onBack}><ArrowLeft size={16} /> Semua Quest</button>
+          <button className="secondary-button" type="button" onClick={onBack}><ArrowLeft size={16} /> Semua Simulasi</button>
           <h1>{quest.title}</h1>
           <p>Topik {quest.topic ?? '-'} · <span className={`status-chip ${locked ? 'status-done' : ''}`}>{locked ? 'Sudah dikirim' : 'Draft'}</span></p>
         </div>
@@ -328,13 +327,13 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
     try {
       const quest = await questApi.createDraft(Number(topicId), prompt.trim());
       setPrompt('');
-      notify('Draft Quest siap. Periksa dan sesuaikan sebelum dikirim.');
+      notify('Draft simulasi siap. Periksa dan sesuaikan sebelum dikirim.');
       setOpenId(quest.id);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   };
 
   const remove = async (q: QuestSummary) => {
-    try { await questApi.remove(q.id); notify('Quest dihapus.'); await loadList(); } catch (e) { setError(errText(e)); }
+    try { await questApi.remove(q.id); notify('Simulasi dihapus.'); await loadList(); } catch (e) { setError(errText(e)); }
   };
 
   const promptLength = prompt.trim().length;
@@ -342,19 +341,17 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
     <div className="page-stack">
       <section className="page-intro">
         <div>
-          <span className="page-kicker">Quest</span>
-          <h1>Buat Moniy Quest</h1>
+          <span className="page-kicker">Simulasi</span>
+          <h1>Buat Simulasi Keuangan</h1>
           <p>Pilih topik dan tulis ide ceritanya. AI menyusun seluruh skenario sebagai draft. Kamu periksa, ubah angkanya, sempurnakan, lalu kirim ke kelas.</p>
         </div>
       </section>
 
       <section className="surface-card">
         <form className="module-form" onSubmit={create}>
-          <label className="field-group">Topik
-            <select className="module-select" value={topicId} onChange={(e) => setTopicId(e.target.value)} disabled={busy || !topics.length}>
-              {topics.map((t) => <option value={t.id} key={t.id}>{t.title}</option>)}
-            </select>
-          </label>
+          <div className="field-group">Topik
+            <FormSelect label="Topik" value={topicId} options={topics.map((t) => ({ value: String(t.id), label: t.title }))} onValueChange={setTopicId} disabled={busy || !topics.length} />
+          </div>
           <label className="field-group">Ide cerita
             <textarea className="module-textarea" rows={4} maxLength={300} value={prompt} onChange={(e) => setPrompt(e.target.value)} disabled={busy}
               placeholder="Contoh: siswa membuka usaha minuman boba di dekat sekolah dengan modal terbatas" />
@@ -363,7 +360,7 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
           {error ? <p className="field-error" role="alert">{error}</p> : null}
           <div className="module-form-actions">
             <button className="primary-button" type="submit" disabled={busy || !topicId || promptLength < 10}>
-              {busy ? <><Loader2 size={18} className="module-spin" /> AI sedang menyusun draft...</> : <><Wand2 size={18} /> Buat draft Quest</>}
+              {busy ? <><Loader2 size={18} className="module-spin" /> AI sedang menyusun draft...</> : <><Wand2 size={18} /> Buat draft simulasi</>}
             </button>
             {busy ? <small className="field-hint">Bisa sampai beberapa menit. Jangan tutup halaman ini.</small> : null}
           </div>
@@ -371,8 +368,8 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
       </section>
 
       <section className="surface-card data-table-card">
-        <div className="section-heading-row"><div><h2>Quest saya</h2><p>Draft dan Quest yang sudah dikirim ke kelas.</p></div></div>
-        {list === null ? <p className="field-hint"><Loader2 size={16} className="module-spin" /> Memuat...</p> : list.length ? (
+        <div className="section-heading-row"><div><h2>Simulasi saya</h2><p>Draft dan simulasi yang sudah dikirim ke kelas.</p></div></div>
+        {list === null ? <div className="quest-list-skeleton" aria-label="Memuat simulasi"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div> : list.length ? (
           <table className="data-table">
             <thead><tr><th>Judul</th><th>Topik</th><th>Status</th><th>Kelas</th><th aria-label="Aksi" /></tr></thead>
             <tbody>{list.map((q) => (
@@ -385,7 +382,7 @@ export function QuestPage({ notify, classOptions }: { notify: Notify; classOptio
               </tr>
             ))}</tbody>
           </table>
-        ) : <EmptyState title="Belum ada Quest" description="Quest yang kamu buat akan muncul di sini." />}
+        ) : <EmptyState title="Belum ada simulasi" description="Simulasi yang kamu buat akan muncul di sini." />}
       </section>
     </div>
   );

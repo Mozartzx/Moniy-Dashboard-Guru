@@ -52,8 +52,8 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 
 export const questApi = {
   topics: async () => {
-    const { data } = await createClient().from('module_topics').select('id, title').order('id');
-    return (data ?? []) as { id: number; title: string }[];
+    const { data } = await createClient().from('module_topics').select('id, title, chapter').not('chapter', 'is', null).order('chapter');
+    return ((data ?? []) as { id: number; title: string; chapter: number }[]).map((t) => ({ id: t.id, title: `Chapter ${t.chapter}: ${t.title}` }));
   },
   mine: () => call<QuestSummary[]>('GET', '/quest/mine'),
   get: (id: number) => call<Quest>('GET', `/quest/${id}`),
