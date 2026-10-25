@@ -24,7 +24,7 @@ export function FormSelect({ label, value, options, disabled, className, onValue
       <SelectTrigger className={`form-select-trigger ${className ?? ''}`} aria-label={label}>
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="topbar-select-content" align="start" sideOffset={8}>
+      <SelectContent className="topbar-select-content" align="start" sideOffset={8} alignItemWithTrigger={false}>
         {options.map((o) => <SelectItem className="topbar-select-item" value={o.value} key={o.value}>{o.label}</SelectItem>)}
       </SelectContent>
     </Select>
