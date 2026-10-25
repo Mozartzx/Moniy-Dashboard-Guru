@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2, PanelRightClose, PanelRightOpen, RotateCcw, Send, X } from 'lucide-react';
+import { Check, Loader2, PanelRightClose, PanelRightOpen, Send, X } from 'lucide-react';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useDefaultLayout } from 'react-resizable-panels';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -142,9 +142,14 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
   const revise = () => {
     const text = reply.trim();
     if (busy || !latestOutline || !text) return;
+    // Riwayat dikirim agar jawaban singkat ("namanya Sara") dipahami sesuai pertanyaan Moniy sebelumnya.
+    const history = turns.flatMap((t) => (t.role === 'user'
+      ? [{ role: 'guru' as const, text: t.text }]
+      : t.reply ? [{ role: 'moni' as const, text: t.reply }]
+        : t.outline ? [{ role: 'moni' as const, text: `Membuat kerangka: ${t.outline.judul}` }] : [])).slice(-8);
     addUser(text); setReply('');
     // Moniy menentukan sendiri: pertanyaan dijawab di chat, permintaan ubah ke Planner, persetujuan langsung menulis.
-    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text }, on))
+    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text, history }, on))
       .then((wantsApprove) => { if (wantsApprove) approve(); });
   };
   const approve = () => {
@@ -191,7 +196,6 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
               {panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />} {panelOpen ? 'Tutup panel' : 'Buka panel'}
             </button>
           ) : null}
-          <button className="secondary-button" type="button" onClick={reset} disabled={busy}><RotateCcw size={16} /> Mulai baru</button>
         </div>
       </div>
       <div className="sim-thread">

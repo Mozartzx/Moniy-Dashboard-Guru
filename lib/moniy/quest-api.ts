@@ -110,7 +110,7 @@ export const questApi = {
   },
   mine: () => call<QuestSummary[]>('GET', '/quest/mine'),
   get: (id: number) => call<Quest>('GET', `/quest/${id}`),
-  outlineStream: (body: { topicId: number; prompt: string; outline?: Outline; instruction?: string }, onEvent: (e: StreamEvent) => void) =>
+  outlineStream: (body: { topicId: number; prompt: string; outline?: Outline; instruction?: string; history?: { role: 'guru' | 'moni'; text: string }[] }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/outline/stream', body, onEvent),
   draftStream: (body: { topicId: number; prompt: string; outline: Outline }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/drafts/stream', body, onEvent),
