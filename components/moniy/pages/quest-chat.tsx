@@ -13,7 +13,7 @@ type StepRow = { key: string; label: string; status: 'running' | 'done' | 'faile
 type DoneInfo = { questId: number; title: string; balanceOk: boolean; warnings: string[] };
 type Turn =
   | { id: number; role: 'user'; text: string }
-  | { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; error?: string; done?: DoneInfo; running: boolean };
+  | { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; reply?: string; error?: string; done?: DoneInfo; running: boolean };
 
 const WAIT_NOTE = 'Proses generate memakan waktu. Mohon jangan tutup halaman ini.';
 
@@ -123,10 +123,12 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     setTurns((prev) => [...prev, { id, role: 'ai', stage, steps: [], running: true }]);
     setBusy(true);
     let ended = false;
+    let wantsApprove = false;
     const onEvent = (e: StreamEvent) => {
       if (e.type === 'step') {
         patch((t) => ({ ...t, steps: t.steps.some((s) => s.key === e.key) ? t.steps.map((s) => (s.key === e.key ? { ...s, label: e.label, status: e.status } : s)) : [...t.steps, { key: e.key, label: e.label, status: e.status }] }));
       } else if (e.type === 'outline') { ended = true; patch((t) => ({ ...t, outline: e.outline })); }
+      else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
       else if (e.type === 'done') { ended = true; patch((t) => ({ ...t, done: { questId: e.questId, title: e.title, balanceOk: e.balanceOk, warnings: e.warnings } })); }
       else if (e.type === 'error') { ended = true; patch((t) => ({ ...t, error: e.message })); }
     };
@@ -134,6 +136,7 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     if (!ended) patch((t) => ({ ...t, error: 'Koneksi terputus sebelum selesai. Coba lagi.' }));
     patch((t) => ({ ...t, running: false }));
     setBusy(false);
+    return wantsApprove;
   };
 
   const addUser = (text: string) => setTurns((prev) => [...prev, { id: nextId.current++, role: 'user', text }]);
@@ -147,7 +150,9 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
     const text = reply.trim();
     if (!latestOutline || !text) return;
     addUser(text); setReply('');
-    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text }, on));
+    // Moniy menentukan sendiri: pertanyaan dijawab di chat, permintaan ubah ke Planner, persetujuan langsung menulis.
+    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text }, on))
+      .then((wantsApprove) => { if (wantsApprove) approve(); });
   };
   const approve = () => {
     if (!latestOutline) return;
@@ -189,8 +194,9 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
           return (
             <div className="sim-msg sim-msg-ai" key={t.id}>
               <StepList steps={t.steps} />
+              {t.reply ? <p className="sim-reply">{t.reply}</p> : null}
               {t.running ? <p className="sim-wait">{WAIT_NOTE}</p> : null}
-              {t.running && t.stage === 'kerangka' && !t.outline ? <div className="sim-skeletons" aria-label="Menyusun kerangka"><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /></div> : null}
+              {t.running && t.stage === 'kerangka' && !t.outline && t.steps.some((s) => s.key === 'rancang') ? <div className="sim-skeletons" aria-label="Menyusun kerangka"><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /><div className="skeleton sim-skeleton" /></div> : null}
               {t.outline ? (isLatest ? <OutlineView outline={t.outline} /> : <details className="sim-old"><summary>Lihat kerangka versi sebelumnya</summary><OutlineView outline={t.outline} /></details>) : null}
               {t.error ? <p className="field-error" role="alert">{t.error}</p> : null}
               {t.done ? <DonePanel done={t.done} classOptions={classOptions} notify={notify} onOpen={onOpen} /> : null}
@@ -204,9 +210,9 @@ export function QuestChat({ topics, classOptions, notify, onOpen, onActiveChange
       ) : (
         <div className="sim-composer">
           <textarea className="module-textarea" rows={2} maxLength={400} value={reply} disabled={busy || !latestOutline} onChange={(e) => setReply(e.target.value)}
-            aria-label="Perubahan yang diinginkan" placeholder="Tulis perubahan yang kamu inginkan, misalnya: ganti skenario 3 jadi soal bunga tabungan." />
+            aria-label="Pesan untuk Moniy" placeholder="Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan." />
           <div className="sim-composer-actions">
-            <button className="secondary-button" type="button" onClick={revise} disabled={busy || !latestOutline || reply.trim().length < 3}><Send size={16} /> Kirim perubahan</button>
+            <button className="secondary-button" type="button" onClick={revise} disabled={busy || !latestOutline || reply.trim().length < 3}><Send size={16} /> Kirim</button>
             <button className="primary-button" type="button" onClick={approve} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>
           </div>
         </div>

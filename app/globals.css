@@ -626,3 +626,4 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .topbar-focus { min-height: 64px; }
 .focus-logo-link { display: flex; align-items: center; border-radius: 8px; }
 .topbar-focus .profile-trigger > span:nth-child(2), .topbar-focus .profile-trigger > svg { display: none; }
+.sim-reply { margin: 0; font-size: var(--text-base); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }

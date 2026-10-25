@@ -31,6 +31,7 @@ export type StreamEvent =
   | { type: 'step'; key: string; label: string; status: 'running' | 'done' | 'failed' }
   | { type: 'outline'; outline: Outline }
   | { type: 'done'; questId: number; title: string; balanceOk: boolean; warnings: string[] }
+  | { type: 'reply'; text: string; approve: boolean }
   | { type: 'error'; message: string }
   | { type: 'ping' };
 
