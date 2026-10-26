@@ -205,8 +205,8 @@ function BackgroundItem({ quest, canEdit, editing, setEditing, reload, notify }:
 }
 
 /** Pilihan jawaban satu skenario, di dalam kartu kerangkanya: kepala baris bisa diklik untuk membuka atau melipat; ikon pensil membuat teksnya bisa diketik langsung. */
-function StepChoices({ quest, step, index, canEdit, editing, setEditing, open, onToggle, reload, notify }: {
-  quest: Quest; step: Step; index: number; canEdit: boolean; editing: string | null; setEditing: (k: string | null) => void;
+function StepChoices({ quest, step, index, sameText, canEdit, editing, setEditing, open, onToggle, reload, notify }: {
+  quest: Quest; step: Step; index: number; sameText: boolean; canEdit: boolean; editing: string | null; setEditing: (k: string | null) => void;
   open: boolean; onToggle: () => void; reload: () => Promise<void>; notify: Notify;
 }) {
   const key = `s${step.rowId}`;
@@ -257,8 +257,13 @@ function StepChoices({ quest, step, index, canEdit, editing, setEditing, open, o
       </div>
       {open ? (
         <div className="sim-step-body">
-          <p>{isEditing ? <Editable name="story" initial={step.story} multiline /> : step.story}</p>
-          <p><strong>{isEditing ? <Editable name="question" initial={step.question} /> : step.question}</strong></p>
+          {/* Kartu sudah menampilkan teks yang sama persis (kerangka dari skenario): tampil lagi hanya saat diedit. */}
+          {isEditing || !sameText ? (
+            <>
+              <p>{isEditing ? <Editable name="story" initial={step.story} multiline /> : step.story}</p>
+              <p><strong>{isEditing ? <Editable name="question" initial={step.question} /> : step.question}</strong></p>
+            </>
+          ) : null}
           <ul className="sim-choices">
             {step.choices.map((c, j) => (
               <li key={j}>
@@ -342,7 +347,7 @@ function SimulasiView({ outline, done, classOptions, notify }: { outline: Outlin
           <OutlineView outline={shown} renderChoices={(i) => {
             const step = stepAt(i);
             return step ? (
-              <StepChoices quest={quest} step={step} index={i} canEdit={canEdit} editing={editing} setEditing={setEditing}
+              <StepChoices quest={quest} step={step} index={i} sameText={shown.items[i].inti === step.story} canEdit={canEdit} editing={editing} setEditing={setEditing}
                 open={openIds.has(step.rowId)} onToggle={() => toggle(step.rowId)} reload={reload} notify={notify} />
             ) : null;
           }} />
