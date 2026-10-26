@@ -164,11 +164,12 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     setBusy(true);
     let ended = false;
     let wantsApprove = false;
+    let outline: Outline | undefined;
     const onEvent = (e: StreamEvent) => {
       if (e.type === 'step') {
         patch((t) => ({ ...t, steps: t.steps.some((s) => s.key === e.key) ? t.steps.map((s) => (s.key === e.key ? { ...s, label: e.label, status: e.status } : s)) : [...t.steps, { key: e.key, label: e.label, status: e.status }] }));
       } else if (e.type === 'outline') {
-        ended = true; patch((t) => ({ ...t, outline: e.outline }));
+        ended = true; outline = e.outline; patch((t) => ({ ...t, outline: e.outline }));
         setPickedVersion(null); setPanelOpen(true);
       } else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
       else if (e.type === 'done') {
@@ -180,7 +181,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     if (!ended) patch((t) => ({ ...t, error: 'Koneksi terputus sebelum selesai. Coba lagi.' }));
     patch((t) => ({ ...t, running: false }));
     setBusy(false);
-    return wantsApprove;
+    return { wantsApprove, outline };
   };
 
   const addUser = (text: string) => setTurns((prev) => [...prev, { id: nextId.current++, role: 'user', text }]);
@@ -188,7 +189,9 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const start = () => {
     const text = idea.trim();
     addUser(text);
-    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text }, on));
+    // Kerangka yang baru jadi langsung dilanjutkan ke simulasi lengkap, tanpa menunggu persetujuan.
+    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text }, on))
+      .then(({ outline }) => { if (outline) approve(outline, text); });
   };
   const revise = () => {
     const text = reply.trim();
@@ -207,12 +210,13 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
       return;
     }
     void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline, instruction: text, history }, on))
-      .then((wantsApprove) => { if (wantsApprove) approve(); });
+      .then(({ wantsApprove }) => { if (wantsApprove) approve(); });
   };
-  const approve = () => {
-    if (!latestOutline) return;
-    addUser('Kerangka disetujui. Buat simulasinya.');
-    void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline }, on));
+  // Kerangka dan ide dikirim langsung saat otomatis (state belum sempat diperbarui); tombol dan persetujuan lewat chat memakai kerangka terbaru.
+  const approve = (outline = latestOutline, prompt = idea.trim()) => {
+    if (!outline) return;
+    if (outline === latestOutline) addUser('Kerangka disetujui. Buat simulasinya.');
+    void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt, outline }, on));
   };
   // Kerangka terbaru bisa diedit langsung di panel; hasilnya menggantikan versi itu (bukan versi baru).
   const editOutline = (next: Outline) => setTurns((prev) => {
@@ -237,7 +241,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
             <span className="field-hint">Tulis tokoh, dilema utama, rentang waktu, dan konsep yang ingin diajarkan. {len}/300, minimal 10 karakter. Enter untuk kirim, Shift+Enter untuk baris baru.</span>
           </label>
           <div className="module-form-actions">
-            <button className="primary-button" type="submit" disabled={!topicId || len < 10}><Send size={18} /> Buat kerangka</button>
+            <button className="primary-button" type="submit" disabled={!topicId || len < 10}><Send size={18} /> Buat simulasi</button>
           </div>
         </form>
       </section>
@@ -294,7 +298,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
           placeholder={doneInfo ? 'Tanya Moniy tentang simulasi ini. Untuk mengubah isi, klik ikon pensil di panel.' : 'Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan.'} />
         <div className="sim-composer-actions">
           <button className="secondary-button" type="button" onClick={revise} disabled={busy || (!latestOutline && !doneInfo) || reply.trim().length < 2}><Send size={16} /> Kirim</button>
-          {doneInfo ? null : <button className="primary-button" type="button" onClick={approve} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>}
+          {doneInfo ? null : <button className="primary-button" type="button" onClick={() => approve()} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>}
         </div>
       </div>
     </div>

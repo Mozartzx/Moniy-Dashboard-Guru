@@ -44,7 +44,7 @@ export function QuestPage({ notify, classOptions, onFocusChange }: { notify: Not
         <div>
           <span className="page-kicker">Simulasi</span>
           <h1>Buat Simulasi Keuangan</h1>
-          <p>Pilih topik dan tulis ide ceritanya. Moniy menyusun kerangka untuk kamu periksa, lalu menulis simulasinya.</p>
+          <p>Pilih topik dan tulis ide ceritanya. Moniy menyusun kerangka dan langsung menulis simulasinya lengkap dengan pilihan jawaban.</p>
         </div>
       </section>}
 
@@ -57,7 +57,7 @@ export function QuestPage({ notify, classOptions, onFocusChange }: { notify: Not
           <table className="data-table">
             <thead><tr><th>Judul</th><th>Topik</th><th>Status</th><th>Kelas</th><th aria-label="Aksi" /></tr></thead>
             <tbody>{list.map((q) => (
-              <tr key={q.id}>
+              <tr className="row-link" key={q.id}>
                 <td><button className="link-button" type="button" onClick={() => setResumeId(q.id)}>{q.title}</button></td>
                 <td>{q.topic ?? '-'}</td>
                 <td><span className={`status-chip sim-status ${q.status === 'published' ? 'status-done' : ''}`}>{q.status === 'published' ? 'Terkirim' : 'Draft'}</span></td>
