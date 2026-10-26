@@ -684,10 +684,12 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .sim-step-chevron { display: inline-flex; color: var(--muted); }
 .quest-class-done { color: var(--muted); }
 .quest-class-done small { font-size: var(--text-xs); }
-.sim-outline-note { margin: 0 0 12px; }
 /* Chip status di tabel: selalu inline dan solid (aturan tabel membuat span menjadi block) */
 .data-table td .status-chip { display: inline-flex; }
 .sim-status { padding: 0 12px; background: #5d6f82; color: #fff; }
 .sim-status.status-done { background: #23834b; }
 /* Teks yang sedang diedit tidak ikut gaya label "Yang dipelajari siswa" */
 .sim-learn li .sim-editable { display: inline; margin: 0; color: inherit; font-size: inherit; font-weight: 400; letter-spacing: normal; text-transform: none; }
+/* Pilihan jawaban di dalam kartu kerangka: garis tipis pemisah, bukan kartu di dalam kartu */
+.sim-item .sim-step-detail { margin-top: 10px; padding: 8px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+.sim-toolbar { display: flex; justify-content: flex-end; }

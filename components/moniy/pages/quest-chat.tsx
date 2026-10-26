@@ -94,7 +94,6 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const [busy, setBusy] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [pickedVersion, setPickedVersion] = useState<number | null>(null);
-  const [view, setView] = useState<'kerangka' | 'simulasi'>('kerangka');
   const [resuming, setResuming] = useState(resumeId !== null);
   const [resumeTopic, setResumeTopic] = useState('');
   const narrow = useNarrow();
@@ -129,7 +128,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
             : 'Simulasi ini sudah dikirim ke kelas. Kamu bisa bertanya tentang isinya di sini.',
         }]);
       }
-      setView('simulasi'); setPanelOpen(true); setResuming(false);
+      setPanelOpen(true); setResuming(false);
     }).catch((err) => { if (live) { setResuming(false); onResumeFailed(`Simulasi tidak bisa dibuka. ${errText(err)}`); } });
     return () => { live = false; };
   }, [resumeId, onResumeFailed]);
@@ -170,11 +169,11 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
         patch((t) => ({ ...t, steps: t.steps.some((s) => s.key === e.key) ? t.steps.map((s) => (s.key === e.key ? { ...s, label: e.label, status: e.status } : s)) : [...t.steps, { key: e.key, label: e.label, status: e.status }] }));
       } else if (e.type === 'outline') {
         ended = true; patch((t) => ({ ...t, outline: e.outline }));
-        setPickedVersion(null); setView('kerangka'); setPanelOpen(true);
+        setPickedVersion(null); setPanelOpen(true);
       } else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
       else if (e.type === 'done') {
         ended = true; patch((t) => ({ ...t, done: { questId: e.questId, title: e.title, balanceOk: e.balanceOk, warnings: e.warnings } }));
-        setView('simulasi'); setPanelOpen(true);
+        setPanelOpen(true);
       } else if (e.type === 'error') { ended = true; patch((t) => ({ ...t, error: e.message })); }
     };
     try { await go(onEvent); } catch (err) { patch((t) => ({ ...t, error: errText(err) })); ended = true; }
@@ -220,8 +219,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     const last = prev.map((t, i) => (t.role === 'ai' && t.outline ? i : -1)).filter((i) => i >= 0).pop();
     return prev.map((t, i) => (i === last && t.role === 'ai' ? { ...t, outline: next } : t));
   });
-  const showVersion = (i: number) => { setPickedVersion(i); setView('kerangka'); setPanelOpen(true); };
-  const showSimulasi = () => { setView('simulasi'); setPanelOpen(true); };
+  const showVersion = (i: number) => { setPickedVersion(i); setPanelOpen(true); };
 
   if (resuming && !active) return <div className="skeleton quest-skeleton" aria-label="Membuka simulasi" />;
 
@@ -282,7 +280,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
                 <div className="sim-result">
                   <div><strong>Simulasi {t.steps.length ? 'siap' : 'dibuka'}</strong><span>{t.done.title}</span></div>
                   <span className={`sim-badge ${t.done.balanceOk ? 'sim-badge-ok' : 'sim-badge-warn'}`}>{t.done.balanceOk ? 'Seimbang' : 'Perlu diperbaiki'}</span>
-                  <button className="secondary-button" type="button" onClick={showSimulasi}>Lihat di panel</button>
+                  <button className="secondary-button" type="button" onClick={() => setPanelOpen(true)}>Lihat di panel</button>
                 </div>
               ) : null}
             </div>
@@ -303,7 +301,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   );
 
   const panel = (
-    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} onEditOutline={editOutline} view={view} onView={setView} done={doneInfo}
+    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} onEditOutline={editOutline} done={doneInfo}
       classOptions={classOptions} notify={notify} onClose={() => setPanelOpen(false)} />
   );
 
