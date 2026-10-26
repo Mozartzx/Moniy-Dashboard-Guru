@@ -214,13 +214,16 @@ function BackgroundItem({ quest, canEdit, editing, setEditing, reload, notify }:
   );
 }
 
+/** Bagian skenario yang teksnya identik dengan teks di kartu kerangka (tidak ditampilkan dua kali). */
+type Same = { story: boolean; question: boolean };
+
 /** Simpan perubahan skenario dari teks yang diedit di kartu; hanya bagian yang berubah yang dikirim. Mengembalikan true bila ada yang diubah. */
-async function saveStep(el: HTMLElement, quest: Quest, step: Step, sameText: boolean): Promise<boolean> {
+async function saveStep(el: HTMLElement, quest: Quest, step: Step, same: Same): Promise<boolean> {
   const patch: { question?: string; story?: string; choices?: Partial<Step['choices'][number]>[] } = {};
-  // Kerangka dari skenario: judul dan inti di kartu adalah pertanyaan dan cerita itu sendiri.
-  const question = readText(el, sameText ? 'judul' : 'question');
+  // Teks yang sama persis dengan kartu hanya ada di kartu; yang dibaca dari sana.
+  const question = readText(el, same.question ? 'judul' : 'question');
   if (question !== step.question) patch.question = question;
-  const story = readText(el, sameText ? 'inti' : 'story');
+  const story = readText(el, same.story ? 'inti' : 'story');
   if (story !== step.story) patch.story = story;
   const choices = step.choices.map((c, i) => {
     const out: Partial<typeof c> = {};
@@ -241,8 +244,8 @@ async function saveStep(el: HTMLElement, quest: Quest, step: Step, sameText: boo
 }
 
 /** Pilihan jawaban satu skenario di dalam kartu kerangkanya: kepala baris membuka atau melipat; teksnya diketik langsung saat kartu diedit. */
-function StepChoices({ step, index, sameText, isEditing, open, onToggle }: {
-  step: Step; index: number; sameText: boolean; isEditing: boolean; open: boolean; onToggle: () => void;
+function StepChoices({ step, index, same, isEditing, open, onToggle }: {
+  step: Step; index: number; same: Same; isEditing: boolean; open: boolean; onToggle: () => void;
 }) {
   const label = `skenario ${index + 1}`;
   return (
@@ -255,13 +258,9 @@ function StepChoices({ step, index, sameText, isEditing, open, onToggle }: {
       </div>
       {open ? (
         <div className="sim-step-body">
-          {/* Teks yang sama persis dengan kartu (kerangka dari skenario) tidak diulang. */}
-          {sameText ? null : (
-            <>
-              <p>{isEditing ? <Editable name="story" initial={step.story} multiline /> : step.story}</p>
-              <p><strong>{isEditing ? <Editable name="question" initial={step.question} /> : step.question}</strong></p>
-            </>
-          )}
+          {/* Teks yang sama persis dengan kartu tidak diulang. */}
+          {same.story ? null : <p>{isEditing ? <Editable name="story" initial={step.story} multiline /> : step.story}</p>}
+          {same.question ? null : <p><strong>{isEditing ? <Editable name="question" initial={step.question} /> : step.question}</strong></p>}
           <ul className="sim-choices">
             {step.choices.map((c, j) => (
               <li key={j}>
@@ -330,10 +329,10 @@ function SimulasiView({ outline, onEditOutline, done, classOptions, notify }: {
   const itemExtra = (i: number): ItemExtra | undefined => {
     const step = stepAt(i);
     if (!quest || !shown || !step) return undefined;
-    const sameText = shown.items[i].inti === step.story;
+    const same: Same = { story: shown.items[i].inti === step.story, question: shown.items[i].judul === step.question };
     return {
-      render: (isEditing) => <StepChoices step={step} index={i} sameText={sameText} isEditing={isEditing} open={openIds.has(step.rowId)} onToggle={() => setOpen(step.rowId, !openIds.has(step.rowId))} />,
-      save: async (el) => { if (await saveStep(el, quest, step, sameText)) { await reload(); notify(`Skenario ${i + 1} disimpan.`); } },
+      render: (isEditing) => <StepChoices step={step} index={i} same={same} isEditing={isEditing} open={openIds.has(step.rowId)} onToggle={() => setOpen(step.rowId, !openIds.has(step.rowId))} />,
+      save: async (el) => { if (await saveStep(el, quest, step, same)) { await reload(); notify(`Skenario ${i + 1} disimpan.`); } },
       onEditStart: () => setOpen(step.rowId, true),
     };
   };
