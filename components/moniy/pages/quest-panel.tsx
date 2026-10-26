@@ -73,15 +73,19 @@ function EditButtons({ editing, saving, disabled, label, onEdit, onSave, onCance
   );
 }
 
-/** Satu skenario pada kerangka: judul, waktu, inti, dan poin belajar bisa diedit langsung. */
-function OutlineItemView({ item, index, editable, editing, setEditing, onSave, children }: {
-  item: OutlineItem; index: number; editable: boolean; editing: string | null; setEditing: (k: string | null) => void; onSave: (next: OutlineItem) => void; children?: ReactNode;
+/** Tambahan per kartu kerangka: pilihan jawaban di bawah poin belajar, dan simpan skenarionya bersama kartu. */
+type ItemExtra = { render: (editing: boolean) => ReactNode; save: (root: HTMLElement) => Promise<void>; onEditStart: () => void };
+
+/** Satu skenario pada kerangka: satu tombol pensil mengedit seluruh isi kartu, termasuk pilihan jawabannya. */
+function OutlineItemView({ item, index, editable, editing, setEditing, onSave, extra }: {
+  item: OutlineItem; index: number; editable: boolean; editing: string | null; setEditing: (k: string | null) => void; onSave: (next: OutlineItem) => void; extra?: ItemExtra;
 }) {
   const key = `i${index}`;
   const isEditing = editing === key;
   const root = useRef<HTMLLIElement>(null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const save = () => {
+  const save = async () => {
     if (!root.current) return;
     const el = root.current;
     const next: OutlineItem = {
@@ -92,7 +96,11 @@ function OutlineItemView({ item, index, editable, editing, setEditing, onSave, c
       belajar: item.belajar.map((_, j) => readText(el, `b${j}`)),
     };
     if (!next.judul || !next.inti || next.belajar.some((b) => !b)) { setError('Judul, inti, dan poin belajar tidak boleh kosong.'); return; }
-    setError(''); onSave(next); setEditing(null);
+    setSaving(true); setError('');
+    try {
+      await extra?.save(el);
+      onSave(next); setEditing(null);
+    } catch (e) { setError(messageOf(e)); } finally { setSaving(false); }
   };
   return (
     <li className="sim-item" ref={root}>
@@ -101,7 +109,7 @@ function OutlineItemView({ item, index, editable, editing, setEditing, onSave, c
         <span className={`sim-badge sim-badge-${item.jenis}`}>{item.jenis === 'kondisi' ? 'Kondisi' : 'Kejadian acak'}</span>
         {isEditing ? <span className="sim-when"><Editable name="waktu" initial={item.waktu ?? ''} /></span> : item.waktu ? <span className="sim-when">{item.waktu}</span> : null}
         <strong className="sim-step-q">{isEditing ? <Editable name="judul" initial={item.judul} /> : item.judul}</strong>
-        {editable ? <EditButtons editing={isEditing} saving={false} disabled={editing !== null} label={`skenario ${index + 1}`} onEdit={() => setEditing(key)} onSave={save} onCancel={() => { setEditing(null); setError(''); }} /> : null}
+        {editable ? <EditButtons editing={isEditing} saving={saving} disabled={editing !== null} label={`skenario ${index + 1}`} onEdit={() => { setEditing(key); extra?.onEditStart(); }} onSave={() => void save()} onCancel={() => { setEditing(null); setError(''); }} /> : null}
       </div>
       <p>{isEditing ? <Editable name="inti" initial={item.inti} multiline /> : item.inti}</p>
       {item.belajar.length ? (
@@ -110,13 +118,15 @@ function OutlineItemView({ item, index, editable, editing, setEditing, onSave, c
           <ul>{item.belajar.map((b, j) => <li key={j}>{isEditing ? <Editable name={`b${j}`} initial={b} multiline /> : b}</li>)}</ul>
         </div>
       ) : null}
-      {children}
+      {extra?.render(isEditing)}
       {error ? <p className="field-error" role="alert">{error}</p> : null}
     </li>
   );
 }
 
-export function OutlineView({ outline, editable, onSave, renderChoices }: { outline: Outline; editable?: boolean; onSave?: (next: Outline) => void; renderChoices?: (index: number) => ReactNode }) {
+export function OutlineView({ outline, editable, onSave, itemExtra, compact }: {
+  outline: Outline; editable?: boolean; onSave?: (next: Outline) => void; itemExtra?: (index: number) => ItemExtra | undefined; compact?: boolean;
+}) {
   const [editing, setEditing] = useState<string | null>(null);
   const head = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
@@ -129,24 +139,24 @@ export function OutlineView({ outline, editable, onSave, renderChoices }: { outl
   };
   return (
     <div className="sim-outline">
-      <div className="sim-outline-head" ref={head}>
-        <div className="sim-bg-head">
-          <strong>{editing === 'head' ? <Editable name="judul" initial={outline.judul} /> : outline.judul}</strong>
-          {canEdit ? <EditButtons editing={editing === 'head'} saving={false} disabled={editing !== null} label="judul kerangka" onEdit={() => setEditing('head')} onSave={saveHead} onCancel={() => { setEditing(null); setError(''); }} /> : null}
+      {compact ? null : (
+        <div className="sim-outline-head" ref={head}>
+          <div className="sim-bg-head">
+            <strong>{editing === 'head' ? <Editable name="judul" initial={outline.judul} /> : outline.judul}</strong>
+            {canEdit ? <EditButtons editing={editing === 'head'} saving={false} disabled={editing !== null} label="judul kerangka" onEdit={() => setEditing('head')} onSave={saveHead} onCancel={() => { setEditing(null); setError(''); }} /> : null}
+          </div>
+          <span>{editing === 'head' ? <Editable name="tokoh" initial={outline.tokoh} /> : outline.tokoh}</span>
+          {outline.rentang || editing === 'head' ? <span>Rentang cerita: {editing === 'head' ? <Editable name="rentang" initial={outline.rentang ?? ''} /> : outline.rentang}</span> : null}
+          {error ? <p className="field-error" role="alert">{error}</p> : null}
         </div>
-        <span>{editing === 'head' ? <Editable name="tokoh" initial={outline.tokoh} /> : outline.tokoh}</span>
-        {outline.rentang || editing === 'head' ? <span>Rentang cerita: {editing === 'head' ? <Editable name="rentang" initial={outline.rentang ?? ''} /> : outline.rentang}</span> : null}
-        {error ? <p className="field-error" role="alert">{error}</p> : null}
-      </div>
+      )}
       <ol>
         {outline.items.map((it, i) => (
-          <OutlineItemView key={i} item={it} index={i} editable={canEdit} editing={editing} setEditing={setEditing}
-            onSave={(next) => onSave?.({ ...outline, items: outline.items.map((x, j) => (j === i ? next : x)) })}>
-            {renderChoices?.(i)}
-          </OutlineItemView>
+          <OutlineItemView key={i} item={it} index={i} editable={canEdit} editing={editing} setEditing={setEditing} extra={itemExtra?.(i)}
+            onSave={(next) => onSave?.({ ...outline, items: outline.items.map((x, j) => (j === i ? next : x)) })} />
         ))}
       </ol>
-      {outline.cakupan?.length ? (
+      {!compact && outline.cakupan?.length ? (
         <div className="sim-coverage">
           <strong>Cakupan materi chapter</strong>
           <ul>{outline.cakupan.map((c) => <li key={c.materi}>{c.materi}: skenario {c.skenario.join(', ')}</li>)}</ul>
@@ -204,66 +214,54 @@ function BackgroundItem({ quest, canEdit, editing, setEditing, reload, notify }:
   );
 }
 
-/** Pilihan jawaban satu skenario, di dalam kartu kerangkanya: kepala baris bisa diklik untuk membuka atau melipat; ikon pensil membuat teksnya bisa diketik langsung. */
-function StepChoices({ quest, step, index, sameText, canEdit, editing, setEditing, open, onToggle, reload, notify }: {
-  quest: Quest; step: Step; index: number; sameText: boolean; canEdit: boolean; editing: string | null; setEditing: (k: string | null) => void;
-  open: boolean; onToggle: () => void; reload: () => Promise<void>; notify: Notify;
+/** Simpan perubahan skenario dari teks yang diedit di kartu; hanya bagian yang berubah yang dikirim. Mengembalikan true bila ada yang diubah. */
+async function saveStep(el: HTMLElement, quest: Quest, step: Step, sameText: boolean): Promise<boolean> {
+  const patch: { question?: string; story?: string; choices?: Partial<Step['choices'][number]>[] } = {};
+  // Kerangka dari skenario: judul dan inti di kartu adalah pertanyaan dan cerita itu sendiri.
+  const question = readText(el, sameText ? 'judul' : 'question');
+  if (question !== step.question) patch.question = question;
+  const story = readText(el, sameText ? 'inti' : 'story');
+  if (story !== step.story) patch.story = story;
+  const choices = step.choices.map((c, i) => {
+    const out: Partial<typeof c> = {};
+    const label = readText(el, `label${i}`);
+    if (label !== c.label) out.label = label;
+    const consequence = readText(el, `cons${i}`);
+    if (consequence !== c.consequence) out.consequence = consequence;
+    const cash = readNumber(el, `cash${i}`, `Saldo pilihan ${i + 1}`);
+    if (cash !== c.cash) out.cash = cash;
+    const days = readNumber(el, `days${i}`, `Hari pilihan ${i + 1}`);
+    if (days !== c.days) out.days = days;
+    return out;
+  });
+  if (choices.some((o) => Object.keys(o).length)) patch.choices = choices;
+  if (!Object.keys(patch).length) return false;
+  await questApi.saveScenario(quest.id, step.rowId, patch);
+  return true;
+}
+
+/** Pilihan jawaban satu skenario di dalam kartu kerangkanya: kepala baris membuka atau melipat; teksnya diketik langsung saat kartu diedit. */
+function StepChoices({ step, index, sameText, isEditing, open, onToggle }: {
+  step: Step; index: number; sameText: boolean; isEditing: boolean; open: boolean; onToggle: () => void;
 }) {
-  const key = `s${step.rowId}`;
-  const isEditing = editing === key;
-  const root = useRef<HTMLElement>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const save = async () => {
-    if (!root.current) return;
-    setSaving(true); setError('');
-    try {
-      // Hanya bagian yang diubah yang dikirim.
-      const el = root.current;
-      const patch: { question?: string; story?: string; choices?: Partial<Step['choices'][number]>[] } = {};
-      const question = readText(el, 'question');
-      if (question !== step.question) patch.question = question;
-      const story = readText(el, 'story');
-      if (story !== step.story) patch.story = story;
-      const choices = step.choices.map((c, i) => {
-        const out: Partial<typeof c> = {};
-        const label = readText(el, `label${i}`);
-        if (label !== c.label) out.label = label;
-        const consequence = readText(el, `cons${i}`);
-        if (consequence !== c.consequence) out.consequence = consequence;
-        const cash = readNumber(el, `cash${i}`, `Saldo pilihan ${i + 1}`);
-        if (cash !== c.cash) out.cash = cash;
-        const days = readNumber(el, `days${i}`, `Hari pilihan ${i + 1}`);
-        if (days !== c.days) out.days = days;
-        return out;
-      });
-      if (choices.some((o) => Object.keys(o).length)) patch.choices = choices;
-      if (Object.keys(patch).length) {
-        await questApi.saveScenario(quest.id, step.rowId, patch);
-        await reload(); notify(`Skenario ${index + 1} disimpan.`);
-      }
-      setEditing(null);
-    } catch (e) { setError(messageOf(e)); } finally { setSaving(false); }
-  };
   const label = `skenario ${index + 1}`;
   return (
-    <section className="sim-step-detail" ref={root}>
+    <section className="sim-step-detail">
       <div className="sim-step-head">
-        {/* Tombol selubung menutup seluruh kepala kartu supaya klik di mana pun membuka atau melipat; mati saat mengedit. */}
+        {/* Tombol selubung menutup seluruh kepala baris supaya klik di mana pun membuka atau melipat; mati saat mengedit. */}
         {isEditing ? null : <button className="sim-step-toggle" type="button" onClick={onToggle} aria-expanded={open} aria-label={open ? `Tutup pilihan jawaban ${label}` : `Lihat pilihan jawaban ${label}`} />}
         <span className="sim-step-chevron" aria-hidden="true">{open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}</span>
         <span className="sim-step-q">Lihat pilihan jawaban</span>
-        {canEdit ? <EditButtons editing={isEditing} saving={saving} disabled={editing !== null} label={label} onEdit={() => { setEditing(key); if (!open) onToggle(); }} onSave={save} onCancel={() => { setEditing(null); setError(''); }} /> : null}
       </div>
       {open ? (
         <div className="sim-step-body">
-          {/* Kartu sudah menampilkan teks yang sama persis (kerangka dari skenario): tampil lagi hanya saat diedit. */}
-          {isEditing || !sameText ? (
+          {/* Teks yang sama persis dengan kartu (kerangka dari skenario) tidak diulang. */}
+          {sameText ? null : (
             <>
               <p>{isEditing ? <Editable name="story" initial={step.story} multiline /> : step.story}</p>
               <p><strong>{isEditing ? <Editable name="question" initial={step.question} /> : step.question}</strong></p>
             </>
-          ) : null}
+          )}
           <ul className="sim-choices">
             {step.choices.map((c, j) => (
               <li key={j}>
@@ -282,7 +280,6 @@ function StepChoices({ quest, step, index, sameText, canEdit, editing, setEditin
           </ul>
         </div>
       ) : null}
-      {error ? <p className="field-error" role="alert">{error}</p> : null}
     </section>
   );
 }
@@ -295,7 +292,9 @@ const outlineOf = (quest: Quest): Outline => ({
 });
 
 /** Kerangka dan simulasi dalam satu tampilan: tiap kartu kerangka membawa pilihan jawaban skenarionya (tertutup di awal). */
-function SimulasiView({ outline, done, classOptions, notify }: { outline: Outline | undefined; done: DoneInfo; classOptions: ClassOption[]; notify: Notify }) {
+function SimulasiView({ outline, onEditOutline, done, classOptions, notify }: {
+  outline: Outline | undefined; onEditOutline: (next: Outline) => void; done: DoneInfo; classOptions: ClassOption[]; notify: Notify;
+}) {
   const [quest, setQuest] = useState<Quest | null>(null);
   const [assigned, setAssigned] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
@@ -314,18 +313,29 @@ function SimulasiView({ outline, done, classOptions, notify }: { outline: Outlin
     });
     return () => { live = false; };
   }, [done.questId]);
-  const toggle = (id: number) => setOpenIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const setOpen = (id: number, on: boolean) => setOpenIds((prev) => { const next = new Set(prev); if (on) next.add(id); else next.delete(id); return next; });
   const balanceOk = quest?.balance.ok ?? done.balanceOk;
   const warnings = quest?.balance.warnings ?? done.warnings;
   const canEdit = quest?.status === 'draft';
   const steps = quest ? [...quest.conditions, ...quest.events] : [];
   const allOpen = steps.length > 0 && steps.every((s) => openIds.has(s.rowId));
   // Kartu kerangka ke-i dipasangkan dengan skenario sejenis yang urutannya sama.
-  const shown = quest ? (outline && outline.items.length === steps.length ? outline : outlineOf(quest)) : null;
+  const real = !!quest && !!outline && outline.items.length === steps.length;
+  const shown = quest ? (real ? outline : outlineOf(quest)) : null;
   const stepAt = (i: number) => {
     if (!quest || !shown) return undefined;
     const jenis = shown.items[i].jenis;
     return (jenis === 'kondisi' ? quest.conditions : quest.events)[shown.items.slice(0, i).filter((x) => x.jenis === jenis).length];
+  };
+  const itemExtra = (i: number): ItemExtra | undefined => {
+    const step = stepAt(i);
+    if (!quest || !shown || !step) return undefined;
+    const sameText = shown.items[i].inti === step.story;
+    return {
+      render: (isEditing) => <StepChoices step={step} index={i} sameText={sameText} isEditing={isEditing} open={openIds.has(step.rowId)} onToggle={() => setOpen(step.rowId, !openIds.has(step.rowId))} />,
+      save: async (el) => { if (await saveStep(el, quest, step, sameText)) { await reload(); notify(`Skenario ${i + 1} disimpan.`); } },
+      onEditStart: () => setOpen(step.rowId, true),
+    };
   };
   return (
     <div className="sim-done">
@@ -335,38 +345,35 @@ function SimulasiView({ outline, done, classOptions, notify }: { outline: Outlin
         {quest && quest.status !== 'draft' ? <span className="sim-badge sim-badge-biasa">Terkirim</span> : null}
       </div>
       {warnings.length ? <ul className="quest-warnings">{warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null}
-      {quest ? <SendPanel quest={quest} classOptions={classOptions} assigned={assigned} onDone={reload} notify={notify} /> : <div className="skeleton sim-skeleton" aria-label="Memuat pengiriman" />}
       {quest && shown ? (
-        <div className="sim-preview">
-          <BackgroundItem quest={quest} canEdit={canEdit} editing={editing} setEditing={setEditing} reload={reload} notify={notify} />
-          <div className="sim-toolbar">
-            <button className="secondary-button" type="button" onClick={() => setOpenIds(allOpen ? new Set() : new Set(steps.map((s) => s.rowId)))}>
-              {allOpen ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />} {allOpen ? 'Tutup semua' : 'Buka semua'}
-            </button>
+        <>
+          <div className="sim-preview">
+            <BackgroundItem quest={quest} canEdit={canEdit} editing={editing} setEditing={setEditing} reload={reload} notify={notify} />
+            <div className="sim-toolbar">
+              <button className="secondary-button" type="button" onClick={() => setOpenIds(allOpen ? new Set() : new Set(steps.map((s) => s.rowId)))}>
+                {allOpen ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />} {allOpen ? 'Tutup semua' : 'Buka semua'}
+              </button>
+            </div>
+            {/* Kerangka dari skenario tidak punya catatan untuk disimpan; hanya skenarionya yang diedit. */}
+            <OutlineView outline={shown} compact editable={canEdit} onSave={real ? onEditOutline : () => undefined} itemExtra={itemExtra} />
           </div>
-          <OutlineView outline={shown} renderChoices={(i) => {
-            const step = stepAt(i);
-            return step ? (
-              <StepChoices quest={quest} step={step} index={i} sameText={shown.items[i].inti === step.story} canEdit={canEdit} editing={editing} setEditing={setEditing}
-                open={openIds.has(step.rowId)} onToggle={() => toggle(step.rowId)} reload={reload} notify={notify} />
-            ) : null;
-          }} />
-        </div>
+          <SendPanel quest={quest} classOptions={classOptions} assigned={assigned} onDone={reload} notify={notify} />
+          {quest.status !== 'draft' ? <RefreshPanel quest={quest} onChanged={reload} notify={notify} /> : null}
+        </>
       ) : <div className="skeleton sim-skeleton" aria-label="Memuat pratinjau" />}
-      {quest && quest.status !== 'draft' ? <RefreshPanel quest={quest} onChanged={reload} notify={notify} /> : null}
     </div>
   );
 }
 
-export function SimPanel({ versions, picked, onPick, onEditOutline, done, classOptions, notify, onClose }: {
-  versions: Outline[]; picked: number; onPick: (i: number) => void; onEditOutline: (outline: Outline) => void;
+export function SimPanel({ versions, picked, onPick, onEditOutline, building, done, classOptions, notify, onClose }: {
+  versions: Outline[]; picked: number; onPick: (i: number) => void; onEditOutline: (outline: Outline) => void; building: boolean;
   done: DoneInfo | null; classOptions: ClassOption[]; notify: Notify; onClose: () => void;
 }) {
   const isLatest = picked === versions.length - 1;
   return (
-    <aside className="sim-panel" aria-label="Panel kerangka dan simulasi">
+    <aside className="sim-panel" aria-label="Panel simulasi">
       <div className="sim-panel-head">
-        {versions.length > 1 && !done ? (
+        {versions.length > 1 && !done && !building ? (
           <div className="sim-tabs" role="tablist" aria-label="Versi kerangka">
             {versions.map((_, i) => <button className="sim-tab sim-tab-small" role="tab" type="button" key={i} aria-selected={picked === i} onClick={() => onPick(i)}>v{i + 1}</button>)}
           </div>
@@ -374,9 +381,9 @@ export function SimPanel({ versions, picked, onPick, onEditOutline, done, classO
         <button className="icon-button sim-panel-close" type="button" onClick={onClose} aria-label="Tutup panel"><X size={18} /></button>
       </div>
       <div className="sim-panel-body">
-        {done ? <SimulasiView outline={versions[versions.length - 1]} done={done} classOptions={classOptions} notify={notify} />
-          : versions[picked] ? <OutlineView key={picked} outline={versions[picked]} editable={isLatest} onSave={onEditOutline} />
-          : <div className="skeleton sim-skeleton" aria-label="Menyusun kerangka" />}
+        {done ? <SimulasiView outline={versions[versions.length - 1]} onEditOutline={onEditOutline} done={done} classOptions={classOptions} notify={notify} />
+          : !building && versions[picked] ? <OutlineView key={picked} outline={versions[picked]} editable={isLatest} onSave={onEditOutline} />
+          : <div className="skeleton sim-skeleton" aria-label="Menyusun simulasi" />}
       </div>
     </aside>
   );

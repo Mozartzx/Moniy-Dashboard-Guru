@@ -12,7 +12,7 @@ type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
 type Topic = { id: number; title: string };
 type StepRow = { key: string; label: string; status: 'running' | 'done' | 'failed' };
-type AiTurn = { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; reply?: string; error?: string; done?: DoneInfo; running: boolean };
+type AiTurn = { id: number; role: 'ai'; stage: 'kerangka' | 'simulasi'; steps: StepRow[]; outline?: Outline; reply?: string; error?: string; done?: DoneInfo; running: boolean; chained?: boolean };
 type Turn = { id: number; role: 'user'; text: string } | AiTurn;
 
 const WAIT_NOTE = 'Proses generate memakan waktu. Mohon jangan tutup halaman ini.';
@@ -150,6 +150,8 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const latestOutline = versions[versions.length - 1];
   const shownVersion = Math.min(pickedVersion ?? versions.length - 1, versions.length - 1);
   const doneInfo = aiTurns.find((t) => t.done)?.done ?? null;
+  // Kerangka sedang dilanjutkan ke simulasi (otomatis); berhenti bila selesai atau gagal.
+  const building = aiTurns.some((t) => t.chained && !t.done && !t.error);
   useEffect(() => {
     if (!doneInfo || busy || turns === savedTurns.current) return;
     savedTurns.current = turns;
@@ -157,10 +159,12 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   }, [turns, doneInfo, busy]);
   const topicLabel = resumeId !== null ? resumeTopic : (topics.find((t) => String(t.id) === topicId)?.title ?? '');
 
-  const run = async (stage: 'kerangka' | 'simulasi', go: (onEvent: (e: StreamEvent) => void) => Promise<void>) => {
-    const id = nextId.current++;
+  // chained: kerangka langsung dilanjutkan ke simulasi dalam satu giliran (kerangkanya tidak ditampilkan); reuse: lanjutkan giliran itu.
+  const run = async (stage: 'kerangka' | 'simulasi', go: (onEvent: (e: StreamEvent) => void) => Promise<void>, opts?: { chained?: boolean; reuse?: number }) => {
+    const id = opts?.reuse ?? nextId.current++;
     const patch = (fn: (t: AiTurn) => AiTurn) => setTurns((prev) => prev.map((t) => (t.id === id && t.role === 'ai' ? fn(t) : t)));
-    setTurns((prev) => [...prev, { id, role: 'ai', stage, steps: [], running: true }]);
+    if (opts?.reuse === undefined) setTurns((prev) => [...prev, { id, role: 'ai', stage, steps: [], running: true, chained: opts?.chained }]);
+    else patch((t) => ({ ...t, running: true }));
     setBusy(true);
     let ended = false;
     let wantsApprove = false;
@@ -170,7 +174,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
         patch((t) => ({ ...t, steps: t.steps.some((s) => s.key === e.key) ? t.steps.map((s) => (s.key === e.key ? { ...s, label: e.label, status: e.status } : s)) : [...t.steps, { key: e.key, label: e.label, status: e.status }] }));
       } else if (e.type === 'outline') {
         ended = true; outline = e.outline; patch((t) => ({ ...t, outline: e.outline }));
-        setPickedVersion(null); setPanelOpen(true);
+        setPickedVersion(null); if (!opts?.chained) setPanelOpen(true);
       } else if (e.type === 'reply') { ended = true; wantsApprove = e.approve; patch((t) => ({ ...t, reply: e.text })); }
       else if (e.type === 'done') {
         ended = true; patch((t) => ({ ...t, done: { questId: e.questId, title: e.title, balanceOk: e.balanceOk, warnings: e.warnings } }));
@@ -181,7 +185,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     if (!ended) patch((t) => ({ ...t, error: 'Koneksi terputus sebelum selesai. Coba lagi.' }));
     patch((t) => ({ ...t, running: false }));
     setBusy(false);
-    return { wantsApprove, outline };
+    return { id, wantsApprove, outline };
   };
 
   const addUser = (text: string) => setTurns((prev) => [...prev, { id: nextId.current++, role: 'user', text }]);
@@ -190,8 +194,8 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     const text = idea.trim();
     addUser(text);
     // Kerangka yang baru jadi langsung dilanjutkan ke simulasi lengkap, tanpa menunggu persetujuan.
-    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text }, on))
-      .then(({ outline }) => { if (outline) approve(outline, text); });
+    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text }, on), { chained: true })
+      .then(({ id, outline }) => { if (outline) approve(outline, text, id); });
   };
   const revise = () => {
     const text = reply.trim();
@@ -213,10 +217,10 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
       .then(({ wantsApprove }) => { if (wantsApprove) approve(); });
   };
   // Kerangka dan ide dikirim langsung saat otomatis (state belum sempat diperbarui); tombol dan persetujuan lewat chat memakai kerangka terbaru.
-  const approve = (outline = latestOutline, prompt = idea.trim()) => {
+  const approve = (outline = latestOutline, prompt = idea.trim(), reuse?: number) => {
     if (!outline) return;
-    if (outline === latestOutline) addUser('Kerangka disetujui. Buat simulasinya.');
-    void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt, outline }, on));
+    if (reuse === undefined) addUser('Kerangka disetujui. Buat simulasinya.');
+    void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt, outline }, on), { reuse });
   };
   // Kerangka terbaru bisa diedit langsung di panel; hasilnya menggantikan versi itu (bukan versi baru).
   const editOutline = (next: Outline) => setTurns((prev) => {
@@ -273,7 +277,7 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
               <StepList steps={t.steps} />
               {t.reply ? <p className="sim-reply">{t.reply}</p> : null}
               {t.running ? <p className="sim-wait">{WAIT_NOTE}</p> : null}
-              {t.outline ? (
+              {t.outline && !t.chained ? (
                 <div className="sim-result">
                   <div><strong>Kerangka versi {myVersion + 1} siap</strong><span>{t.outline.judul}, {t.outline.items.length} skenario</span></div>
                   <button className="secondary-button" type="button" onClick={() => showVersion(myVersion)}>Lihat di panel</button>
@@ -298,14 +302,14 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
           placeholder={doneInfo ? 'Tanya Moniy tentang simulasi ini. Untuk mengubah isi, klik ikon pensil di panel.' : 'Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan.'} />
         <div className="sim-composer-actions">
           <button className="secondary-button" type="button" onClick={revise} disabled={busy || (!latestOutline && !doneInfo) || reply.trim().length < 2}><Send size={16} /> Kirim</button>
-          {doneInfo ? null : <button className="primary-button" type="button" onClick={() => approve()} disabled={busy || !latestOutline}>Setujui kerangka dan buat simulasi</button>}
+          {doneInfo || building || busy || !latestOutline ? null : <button className="primary-button" type="button" onClick={() => approve()}>Setujui kerangka dan buat simulasi</button>}
         </div>
       </div>
     </div>
   );
 
   const panel = (
-    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} onEditOutline={editOutline} done={doneInfo}
+    <SimPanel versions={versions} picked={Math.max(shownVersion, 0)} onPick={showVersion} onEditOutline={editOutline} building={building} done={doneInfo}
       classOptions={classOptions} notify={notify} onClose={() => setPanelOpen(false)} />
   );
 
