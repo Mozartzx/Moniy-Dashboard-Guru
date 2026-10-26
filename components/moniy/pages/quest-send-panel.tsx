@@ -3,6 +3,7 @@
 import { Loader2, Send } from 'lucide-react';
 import { useState } from 'react';
 import { errText, questApi, type Quest } from '@/lib/moniy/quest-api';
+import { FeedbackDialog } from './quest-feedback-dialog';
 
 type Notify = (message: string, duration?: number) => void;
 type ClassOption = { value: string; label: string };
@@ -12,6 +13,7 @@ export function SendPanel({ quest, classOptions, assigned, onDone, notify }: { q
   const [refresh, setRefresh] = useState(quest.refreshEnabled);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [askFeedback, setAskFeedback] = useState(false);
   const draft = quest.status === 'draft';
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
@@ -22,6 +24,8 @@ export function SendPanel({ quest, classOptions, assigned, onDone, notify }: { q
       setPicked([]);
       await onDone();
       notify(draft ? 'Simulasi dikirim ke kelas.' : 'Simulasi ditambahkan ke kelas.');
+      // Ditanyakan sekali, saat pengiriman pertama (draft jadi terkirim).
+      if (draft) setAskFeedback(true);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   };
 
@@ -49,6 +53,7 @@ export function SendPanel({ quest, classOptions, assigned, onDone, notify }: { q
         </button>
         {draft && !quest.balance.ok ? <small className="field-hint">Perbaiki peringatan keseimbangan dulu.</small> : null}
       </div>
+      <FeedbackDialog questId={quest.id} open={askFeedback} onClose={() => setAskFeedback(false)} notify={notify} />
     </section>
   );
 }

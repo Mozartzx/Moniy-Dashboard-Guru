@@ -21,6 +21,7 @@ export type Quest = {
 export type QuestSummary = { id: number; title: string; topic: string | null; status: 'draft' | 'published'; refreshEnabled: boolean; createdAt: string; classIds: string[] };
 export type PolishFields = { story: string; question: string; hint: string | null; choices: { label: string; consequence: string }[] };
 export type Proposal = { rowId: number; type: Step['type']; step: number; changed: boolean; before: PolishFields; after: PolishFields; kept: string[] };
+export type FeedbackAspect = 'angka' | 'realistis' | 'level' | 'tujuan' | 'soal' | 'bahasa';
 export type RefreshOverview = {
   enabled: boolean;
   students: { userId: number; name: string; classId: string; started: boolean; refreshDays: number; lastRefreshDate: string | null; cash: number | null; day: number | null; phase: string | null }[];
@@ -130,5 +131,6 @@ export const questApi = {
   assign: (id: number, classIds: string[]) => call<unknown>('POST', `/quest/${id}/assign`, { classIds }),
   setRefresh: (id: number, enabled: boolean) => call<{ refreshEnabled: boolean }>('PATCH', `/quest/${id}/refresh`, { enabled }),
   refreshOverview: (id: number) => call<RefreshOverview>('GET', `/quest/${id}/refresh`),
+  feedback: (id: number, body: { rating: 'up' | 'down'; aspects: FeedbackAspect[]; comment?: string }) => call<{ saved: boolean }>('POST', `/quest/${id}/feedback`, body),
   remove: (id: number) => call<unknown>('DELETE', `/quest/${id}`),
 };

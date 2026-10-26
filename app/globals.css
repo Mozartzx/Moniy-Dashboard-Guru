@@ -359,6 +359,10 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .modal-section { margin-top: 17px; }
 .modal-section h3 { margin: 0 0 8px; font-size: var(--text-sm); }
 .modal-section textarea { width: 100%; resize: vertical; padding: 12px; border: 1px solid var(--border); border-radius: 12px; color: var(--navy); background: #fbfdff; font-size: var(--text-sm); line-height: 1.5; }
+.feedback-rate { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.feedback-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.feedback-chip { min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; color: var(--navy); background: #fff; font-size: var(--text-sm); cursor: pointer; }
+.feedback-chip-on { border-color: var(--blue); color: #fff; background: var(--blue); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; }
 .mock-modal-note { display: block; margin-top: 12px; color: #8998a6; font-size: var(--text-xs); }
 .report-layout { display: grid; grid-template-columns: minmax(450px, 1.05fr) minmax(340px, .95fr); gap: 18px; align-items: start; }
