@@ -42,13 +42,15 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       supabase.from('classes').select('id, name').eq('id', classId).maybeSingle(),
       supabase.from('users').select('id, name').eq('class_id', classId).eq('role', 'student'),
       supabase.from('modules').select('id, title, topic_id'),
-      supabase.from('module_topics').select('id, title, color'),
+      // Hanya 8 chapter resmi (chapter bukan null); topik lama seperti Wirausaha/Pajak tidak ditampilkan.
+      supabase.from('module_topics').select('id, title, color').not('chapter', 'is', null).order('chapter'),
     ]);
 
     const studentRows = studentUsers ?? [];
     const studentIds = studentRows.map((row) => row.id);
-    const moduleRows = allModules ?? [];
     const topicRows = topicsMeta ?? [];
+    const chapterTopicIds = new Set(topicRows.map((topic) => topic.id));
+    const moduleRows = (allModules ?? []).filter((module) => chapterTopicIds.has(module.topic_id));
 
     const [{ data: progressRows }, { data: quizRows }, { data: decisionRows }, { data: gamblingRows }, { data: postRows }, { data: quizMetaRows }, { data: questionRows }, { data: answerLogRows }] = await Promise.all([
       studentIds.length

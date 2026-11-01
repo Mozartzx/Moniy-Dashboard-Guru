@@ -43,6 +43,13 @@ delete from public.users where email like '%@seed.moniy.test';
 delete from public.classes where id in ('MONIY-SEEDB1','MONIY-SEEDC1');
 ```
 
+## Seed akun guru `greenmaggot8@gmail.com` (2026-11-01)
+
+Guru users.id 219, tiga kelas: X A (`MONIY-SEEDG1`, 28 siswa), X B (`MONIY-JYG9L2`, 20 siswa, kelas asli), X C (`MONIY-SEEDG3`, 15 siswa).
+Siswa berformat `seed.gN.NN@seed.moniy.test` (ikut terhapus oleh pembersihan `%@seed.moniy.test` di atas). Tiap kelas punya progres, kuis, keputusan, dan kejadian judi sendiri.
+Kejadian anonim 7 hari terakhir vs 7 hari sebelumnya: X A 42 vs 7 (naik), X B 15 vs 34 (turun), X C 3 vs 3 (stabil).
+Membersihkan kelas tambahan: `delete from public.classes where id in ('MONIY-SEEDG1','MONIY-SEEDG3');` setelah seluruh data siswa dan kejadian kelas itu dihapus.
+
 ## Log jawaban kuis dummy (2026-10-08)
 
 435 baris `quiz_answer_log` dibuat untuk 87 hasil kuis siswa seed (`@seed.moniy.test`), konsisten dengan

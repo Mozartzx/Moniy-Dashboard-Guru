@@ -20,7 +20,7 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
     { label: 'Nilai rata-rata', value: snapshot.averageScore.toFixed(1), helper: 'Rata-rata nilai kuis & modul kelas', icon: GraduationCap, tone: 'blue' },
     { label: 'Modul selesai', value: `${snapshot.completionRate}%`, helper: `${Math.round(snapshot.studentCount * snapshot.completionRate / 100)} dari ${snapshot.studentCount} siswa`, icon: BookOpenCheck, tone: 'cyan' },
     { label: 'Perlu penguatan', value: String(snapshot.supportCount), helper: 'Berdasarkan progres belajar', icon: HandHeart, tone: 'orange' },
-    { label: 'Kerentanan kelas', value: snapshot.riskLevel, helper: `${snapshot.riskEventCount} kejadian anonim`, icon: ShieldQuestion, tone: snapshot.riskLevel === 'Rendah' ? 'green' : 'orange' },
+    { label: 'Kerentanan kelas', value: String(snapshot.riskEventCount), helper: 'kejadian anonim periode ini', icon: ShieldQuestion, tone: snapshot.riskLevel === 'Rendah' ? 'green' : 'orange' },
   ];
 
   return (
@@ -51,7 +51,7 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
 
       <section className="overview-grid lower-overview-grid">
         <article className="surface-card compact-card">
-          <div className="section-heading-row"><div><h2>Sinyal perlindungan kelas</h2><p>Agregat anonim untuk pembinaan kolektif.</p></div><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span></div>
+          <div className="section-heading-row"><div><h2>Sinyal perlindungan kelas</h2><p>Agregat anonim untuk pembinaan kolektif.</p></div><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskEventCount}</span></div>
           <div className="risk-mini-row"><span className="solid-icon green"><ShieldCheck size={22} /></span><div><strong>{snapshot.riskEventCount} kejadian terdeteksi</strong><span>{snapshot.riskDelta === 0 ? 'Sama dengan periode lalu' : `${snapshot.riskDelta > 0 ? 'Meningkat' : 'Menurun'} ${Math.abs(snapshot.riskDelta)}% dari periode lalu`}</span></div></div>
           <BrowserNavigationLink className="text-action" href="/dashboard/peringatan-judi">Buka peringatan kelas <ArrowRight size={17} /></BrowserNavigationLink>
         </article>

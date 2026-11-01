@@ -23,7 +23,7 @@ export function ReportsPage({ snapshot, className, periodLabel }: { snapshot: Cl
     const sections = [`<h1>Laporan Kelas MONIY</h1><p>Kelas: ${className}</p><p>Periode: ${periodLabel}</p>`];
     if (includeLearning) sections.push(`<h2>Progres Belajar</h2><table border="1"><tr><th>Topik</th><th>Nilai Kuis</th><th>Jawaban Benar</th></tr>${snapshot.topics.map((topic) => `<tr><td>${topic.name}</td><td>${topic.quizAverage}</td><td>${topic.correctRate}%</td></tr>`).join('')}</table>`);
     if (includeDecisions) sections.push(`<h2>Rekam Belajar Siswa</h2><table border="1"><tr><th>Siswa</th><th>Modul Aktif</th><th>Status</th><th>Nilai</th></tr>${snapshot.students.map((student) => `<tr><td>${student.name}</td><td>${student.activeModule}</td><td>${student.status}</td><td>${student.score ?? '-'}</td></tr>`).join('')}</table>`);
-    if (includeRisk) sections.push(`<h2>Kerentanan Judi Online</h2><p>Tingkat kelas: ${snapshot.riskLevel}</p><p>Jumlah kejadian anonim: ${snapshot.riskEventCount}</p><p>Data ini agregat dan tidak memuat identitas siswa.</p>`);
+    if (includeRisk) sections.push(`<h2>Kerentanan Judi Online</h2><p>Jumlah kejadian anonim: ${snapshot.riskEventCount}</p><p>Data ini agregat dan tidak memuat identitas siswa.</p>`);
     if (includeCommunity) sections.push(`<h2>Komunitas Kelas</h2><table border="1"><tr><th>Judul</th><th>Siswa</th><th>Status Tinjauan</th></tr>${snapshot.communityPosts.map((post) => `<tr><td>${post.title}</td><td>${post.studentName}</td><td>${post.reviewed ? 'Sudah' : 'Belum'}</td></tr>`).join('')}</table>`);
     const blob = new Blob([`<html><head><meta charset="utf-8"></head><body>${sections.join('')}</body></html>`], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
@@ -52,7 +52,7 @@ export function ReportsPage({ snapshot, className, periodLabel }: { snapshot: Cl
           <h2>Laporan Kelas</h2><p>{className} | {periodLabel}</p>
           <div className="preview-metrics"><div><strong>{snapshot.averageScore.toFixed(1)}</strong><span>Nilai rata-rata</span></div><div><strong>{snapshot.completionRate}%</strong><span>Modul selesai</span></div></div>
           {includeLearning ? <div className="preview-section"><h3>Progres belajar</h3>{snapshot.topics.slice(0, 3).map((topic) => <div key={topic.id}><span>{topic.name}</span><strong>{topic.correctRate}%</strong></div>)}</div> : null}
-          {includeRisk ? <div className="preview-risk"><ShieldCheck size={18} /><p><strong>Kerentanan kelas: {snapshot.riskLevel}</strong>{snapshot.riskEventCount} kejadian anonim pada periode ini.</p></div> : null}
+          {includeRisk ? <div className="preview-risk"><ShieldCheck size={18} /><p><strong>Kerentanan kelas: {snapshot.riskEventCount}</strong>kejadian anonim pada periode ini.</p></div> : null}
           <small>Pratinjau laporan sebelum diunduh.</small>
         </div></aside>
       </section>

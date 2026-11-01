@@ -19,7 +19,7 @@ export function RiskPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
         </div>
         <div className="risk-hero-copy">
           <span className="page-kicker">Agregat anonim</span><h1>Peringatan judi online</h1><p>Sinyal preventif tingkat kelas untuk membantu pembinaan kolektif bersama guru BK.</p>
-          <div className="risk-summary-line"><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskLevel}</span><span>{snapshot.riskDelta === 0 ? <><Minus size={18} /> Sama dengan periode lalu</> : <>{isImproving ? <TrendingDown size={18} /> : <TrendingUp size={18} />} {isImproving ? 'Turun' : 'Naik'} {Math.abs(snapshot.riskDelta)}% dari periode lalu</>}</span></div>
+          <div className="risk-summary-line"><span className={`risk-level risk-${snapshot.riskLevel.toLowerCase()}`}>{snapshot.riskEventCount}</span><span>{snapshot.riskDelta === 0 ? <><Minus size={18} /> Sama dengan periode lalu</> : <>{isImproving ? <TrendingDown size={18} /> : <TrendingUp size={18} />} {isImproving ? 'Turun' : 'Naik'} {Math.abs(snapshot.riskDelta)}% dari periode lalu</>}</span></div>
         </div>
       </section>
 
