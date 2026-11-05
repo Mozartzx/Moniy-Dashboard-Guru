@@ -43,7 +43,7 @@ function StudentDetail({ student }: { student: Student }) {
   return (
     <div className="student-detail">
       <div className="student-detail-head"><span className="student-avatar large">{student.initials}</span><div><h2>{student.name}</h2><p>{student.activeModule}</p></div></div>
-      <div className="student-detail-stats"><div><span>Progres</span><strong>{student.completedTopics}/{student.totalTopics} topik</strong></div><div><span>Nilai kuis</span><strong>{student.score ?? 'Belum ada'}</strong></div></div>
+      <div className="student-detail-stats"><div><span>Progres</span><strong>{student.completedTopics}/{student.totalTopics} topik</strong></div><div><span>Nilai siswa</span><strong>{student.score ?? 'Belum ada'}</strong></div></div>
       <div className="thin-progress student-progress" aria-label={`Progres ${progress}%`}><span style={{ transform: `scaleX(${progress / 100})` }} /></div>
       <div className="detail-section-title"><h3>Keputusan terbaru</h3><span>Data belajar individual</span></div>
       {student.decisions.length ? <div className="decision-timeline">{student.decisions.map((decision) => <div className="decision-item" key={decision.id}><span className={decision.outcome === 'tepat' ? 'decision-dot good' : 'decision-dot reflect'}>{decision.outcome === 'tepat' ? <Check size={17} /> : <Lightbulb size={17} />}</span><div><strong>{decision.title}</strong><span>{decision.chapter} | {decision.time}</span>{decision.note && <p>{decision.note}</p>}</div></div>)}</div> : <EmptyState title="Belum ada keputusan" description="Siswa belum memulai sesi storytelling." />}

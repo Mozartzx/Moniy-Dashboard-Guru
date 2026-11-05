@@ -13,7 +13,7 @@ export function ReportsPage({ snapshot, className, periodLabel }: { snapshot: Cl
   const [exported, setExported] = useState(false);
 
   const reportItems = [
-    { checked: includeLearning, setChecked: setIncludeLearning, title: 'Progres belajar', text: 'Status topik, nilai kuis, dan pola benar-salah.' },
+    { checked: includeLearning, setChecked: setIncludeLearning, title: 'Progres belajar', text: 'Status topik, nilai siswa, dan pola benar-salah.' },
     { checked: includeDecisions, setChecked: setIncludeDecisions, title: 'Rekam keputusan siswa', text: 'Riwayat belajar individual untuk tindak lanjut pedagogis.' },
     { checked: includeRisk, setChecked: setIncludeRisk, title: 'Kerentanan judi tingkat kelas', text: 'Hanya angka agregat anonim dan rekomendasi pembinaan.' },
     { checked: includeCommunity, setChecked: setIncludeCommunity, title: 'Komunitas kelas', text: 'Hasil Simulasi Bisnis dan status tinjauan.' },
@@ -21,7 +21,7 @@ export function ReportsPage({ snapshot, className, periodLabel }: { snapshot: Cl
 
   const exportReport = () => {
     const sections = [`<h1>Laporan Kelas MONIY</h1><p>Kelas: ${className}</p><p>Periode: ${periodLabel}</p>`];
-    if (includeLearning) sections.push(`<h2>Progres Belajar</h2><table border="1"><tr><th>Topik</th><th>Nilai Kuis</th><th>Jawaban Benar</th></tr>${snapshot.topics.map((topic) => `<tr><td>${topic.name}</td><td>${topic.quizAverage}</td><td>${topic.correctRate}%</td></tr>`).join('')}</table>`);
+    if (includeLearning) sections.push(`<h2>Progres Belajar</h2><table border="1"><tr><th>Topik</th><th>Nilai Siswa</th><th>Jawaban Benar</th></tr>${snapshot.topics.map((topic) => `<tr><td>${topic.name}</td><td>${topic.quizAverage}</td><td>${topic.correctRate}%</td></tr>`).join('')}</table>`);
     if (includeDecisions) sections.push(`<h2>Rekam Belajar Siswa</h2><table border="1"><tr><th>Siswa</th><th>Modul Aktif</th><th>Status</th><th>Nilai</th></tr>${snapshot.students.map((student) => `<tr><td>${student.name}</td><td>${student.activeModule}</td><td>${student.status}</td><td>${student.score ?? '-'}</td></tr>`).join('')}</table>`);
     if (includeRisk) sections.push(`<h2>Kerentanan Judi Online</h2><p>Jumlah kejadian anonim: ${snapshot.riskEventCount}</p><p>Data ini agregat dan tidak memuat identitas siswa.</p>`);
     if (includeCommunity) sections.push(`<h2>Komunitas Kelas</h2><table border="1"><tr><th>Judul</th><th>Siswa</th><th>Status Tinjauan</th></tr>${snapshot.communityPosts.map((post) => `<tr><td>${post.title}</td><td>${post.studentName}</td><td>${post.reviewed ? 'Sudah' : 'Belum'}</td></tr>`).join('')}</table>`);
