@@ -35,6 +35,38 @@ export type Student = {
   decisions: LearningDecision[];
 };
 
+export type TopicChoice = {
+  question: string;
+  answer: string;
+  verdict: 'cerdas' | 'biasa' | 'buruk';
+  consequence: string;
+  cashAfter: number;
+};
+
+export type TopicStudentReport = {
+  id: string;
+  name: string;
+  initials: string;
+  status: LearningStatus;
+  score: number | null;
+  finalCash: number | null;
+  goal: number | null;
+  /** null selama siswa belum menamatkan simulasi */
+  reachedGoal: boolean | null;
+  choices: TopicChoice[];
+};
+
+export type TopicReport = {
+  topicId: string;
+  topicName: string;
+  studentCount: number;
+  finishedCount: number;
+  averageScore: number | null;
+  reachedGoalCount: number;
+  missedGoalCount: number;
+  students: TopicStudentReport[];
+};
+
 export type RiskTrend = {
   label: string;
   events: number;
@@ -78,5 +110,6 @@ export type DashboardQuery = {
 
 export interface TeacherDashboardRepository {
   getSnapshot(query: DashboardQuery): Promise<ClassroomSnapshot>;
+  getTopicReport(classId: string, topicId: string): Promise<TopicReport>;
   markCommunityPostReviewed(postId: string): Promise<void>;
 }

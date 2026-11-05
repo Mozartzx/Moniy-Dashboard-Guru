@@ -5,11 +5,14 @@ import { useState } from 'react';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
 import { useDashboardContext } from '@/components/moniy/dashboard/dashboard-context';
 import { EmptyState } from './page-primitives';
+import { TopicDetail } from './topic-detail';
 
 export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
   const [selectedTopicId, setSelectedTopicId] = useState(snapshot.topics[0]?.id ?? '');
   const [category, setCategory] = useState('semua');
+  const [detailTopicId, setDetailTopicId] = useState<string | null>(null);
   const { notify } = useDashboardContext();
+  if (detailTopicId) return <TopicDetail classId={snapshot.classId} topicId={detailTopicId} onBack={() => setDetailTopicId(null)} />;
   const visibleTopics = snapshot.topics.filter((topic) => category === 'semua' || topic.category === category);
   const selected = snapshot.topics.find((topic) => topic.id === selectedTopicId) ?? visibleTopics[0];
   const categories = Array.from(new Set(snapshot.topics.map((topic) => topic.category)));
@@ -19,8 +22,8 @@ export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
       <section className="page-intro"><div><span className="page-kicker">Progres belajar</span><h1>Pahami pola keputusan kelas</h1><p>Bandingkan penyelesaian, nilai siswa, dan pola keputusan pada setiap topik.</p></div><label className="compact-select"><span>Kelompok topik</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="semua">Semua topik</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label></section>
 
       <article className="surface-card data-table-card">
-        <div className="section-heading-row"><div><h2>Ringkasan per topik</h2><p>Pilih satu baris untuk membuka pola keputusan yang perlu diperhatikan.</p></div></div>
-        {visibleTopics.length ? <div className="table-scroll"><table className="data-table"><thead><tr><th>Topik</th><th>Belum</th><th>Berjalan</th><th>Selesai</th><th>Nilai siswa</th><th>Jawaban benar</th></tr></thead><tbody>{visibleTopics.map((topic) => <tr key={topic.id} className={selected?.id === topic.id ? 'selected-row' : ''}><td><button className="topic-row-button" type="button" onClick={() => setSelectedTopicId(topic.id)} aria-label={`Pilih ${topic.name}`}><strong>{topic.name}</strong>{topic.category !== topic.name ? <span>{topic.category}</span> : null}</button></td><td>{topic.notStarted}</td><td>{topic.inProgress}</td><td>{topic.completed}</td><td><b>{topic.quizAverage}</b></td><td><div className="table-rate"><span>{topic.correctRate}%</span><progress max={100} value={topic.correctRate} aria-label={`Jawaban benar ${topic.correctRate}%`} /></div></td></tr>)}</tbody></table></div> : <EmptyState title="Belum ada data topik" description="Coba pilih kelas atau periode lain." />}
+        <div className="section-heading-row"><div><h2>Ringkasan per topik</h2><p>Pilih satu baris untuk membuka nilai, ketercapaian target, dan pilihan tiap siswa.</p></div></div>
+        {visibleTopics.length ? <div className="table-scroll"><table className="data-table"><thead><tr><th>Topik</th><th>Belum</th><th>Berjalan</th><th>Selesai</th><th>Nilai siswa</th><th>Jawaban benar</th></tr></thead><tbody>{visibleTopics.map((topic) => <tr key={topic.id} className={selected?.id === topic.id ? 'selected-row' : ''}><td><button className="topic-row-button" type="button" onClick={() => { setSelectedTopicId(topic.id); setDetailTopicId(topic.id); }} aria-label={`Buka detail ${topic.name}`}><strong>{topic.name}</strong>{topic.category !== topic.name ? <span>{topic.category}</span> : null}</button></td><td>{topic.notStarted}</td><td>{topic.inProgress}</td><td>{topic.completed}</td><td><b>{topic.quizAverage}</b></td><td><div className="table-rate"><span>{topic.correctRate}%</span><progress max={100} value={topic.correctRate} aria-label={`Jawaban benar ${topic.correctRate}%`} /></div></td></tr>)}</tbody></table></div> : <EmptyState title="Belum ada data topik" description="Coba pilih kelas atau periode lain." />}
       </article>
 
       {selected ? <section className="progress-detail-grid">

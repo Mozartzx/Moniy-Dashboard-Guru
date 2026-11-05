@@ -10,7 +10,10 @@ import type {
   RiskTrend,
   Student,
   TeacherDashboardRepository,
+  TopicChoice,
   TopicProgress,
+  TopicReport,
+  TopicStudentReport,
 } from './types';
 
 // Per-topic quiz numbers come from quizzes.topic_id + quiz_results, and the most
@@ -273,6 +276,72 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       communityPosts,
       insight,
       recommendation,
+    };
+  }
+
+  // Detail satu topik: nilai dan saldo akhir tiap siswa serta pilihan di setiap langkah simulasi.
+  // Selesai = user_module_progress.progress >= 1; saldo, target, dan pilihan dari story_journeys.
+  async getTopicReport(classId: string, topicId: string): Promise<TopicReport> {
+    const supabase = createClient();
+    const [{ data: users }, { data: topic }, { data: modules }] = await Promise.all([
+      supabase.from('users').select('id, name').eq('class_id', classId).eq('role', 'student'),
+      supabase.from('module_topics').select('title').eq('id', Number(topicId)).maybeSingle(),
+      supabase.from('modules').select('id').eq('topic_id', Number(topicId)),
+    ]);
+    const studentRows = users ?? [];
+    const studentIds = studentRows.map((row) => row.id);
+    const moduleIds = (modules ?? []).map((row) => row.id);
+
+    type Entry = { question: string; answer: string; verdict: TopicChoice['verdict']; consequence: string; cashAfter: number };
+    type Journey = { user_id: number; module_id: number; state: { cash?: number; goal?: number; history?: Entry[] } | null };
+    const [{ data: progressRows }, { data: journeyRows }] = studentIds.length && moduleIds.length
+      ? await Promise.all([
+          supabase.from('user_module_progress').select('user_id, module_id, progress, score').in('user_id', studentIds).in('module_id', moduleIds),
+          supabase.from('story_journeys').select('user_id, module_id, state').in('user_id', studentIds).in('module_id', moduleIds),
+        ])
+      : [{ data: [] }, { data: [] }];
+
+    const progress = (progressRows ?? []) as Array<{ user_id: number; module_id: number; progress: number | null; score: number | null }>;
+    const journeys = (journeyRows ?? []) as Journey[];
+
+    const students: TopicStudentReport[] = studentRows.map((row) => {
+      const mine = progress.filter((item) => item.user_id === row.id);
+      const done = mine.filter((item) => (item.progress ?? 0) >= 1);
+      const best = done.reduce<(typeof done)[number] | null>((top, item) => (top === null || (item.score ?? 0) > (top.score ?? 0) ? item : top), null);
+      const journey = journeys.find((item) => item.user_id === row.id && item.module_id === (best ?? mine[0])?.module_id);
+      const state = journey?.state ?? null;
+      const finished = best !== null;
+      const finalCash = finished && typeof state?.cash === 'number' ? state.cash : null;
+      const goal = typeof state?.goal === 'number' ? state.goal : null;
+      return {
+        id: String(row.id),
+        name: row.name,
+        initials: row.name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase(),
+        status: finished ? 'Selesai' : mine.length || state?.history?.length ? 'Berjalan' : 'Belum',
+        score: best?.score ?? null,
+        finalCash,
+        goal,
+        reachedGoal: finalCash !== null && goal !== null && goal > 0 ? finalCash >= goal : null,
+        choices: (state?.history ?? []).map((entry) => ({
+          question: entry.question,
+          answer: entry.answer,
+          verdict: entry.verdict,
+          consequence: entry.consequence,
+          cashAfter: entry.cashAfter,
+        })),
+      };
+    });
+
+    const scores = students.map((student) => student.score).filter((value): value is number => value !== null);
+    return {
+      topicId,
+      topicName: topic?.title ?? 'Topik',
+      studentCount: students.length,
+      finishedCount: students.filter((student) => student.status === 'Selesai').length,
+      averageScore: scores.length ? Math.round((scores.reduce((sum, value) => sum + value, 0) / scores.length) * 10) / 10 : null,
+      reachedGoalCount: students.filter((student) => student.reachedGoal === true).length,
+      missedGoalCount: students.filter((student) => student.reachedGoal === false).length,
+      students: students.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name)),
     };
   }
 

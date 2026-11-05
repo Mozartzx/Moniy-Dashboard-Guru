@@ -225,6 +225,22 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .table-rate progress::-webkit-progress-bar { border-radius: 99px; background: #e5edf4; }
 .table-rate progress::-webkit-progress-value { border-radius: 99px; background: var(--blue); }
 .table-rate progress::-moz-progress-bar { border-radius: 99px; background: var(--blue); }
+.topic-student-list { display: grid; gap: 10px; padding: 0 20px 20px; }
+.topic-student { border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+.topic-student summary { display: grid; grid-template-columns: minmax(0, 1fr) auto 20px; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; list-style: none; }
+.topic-student summary::-webkit-details-marker { display: none; }
+.topic-student-meta { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; font-size: var(--text-sm); color: #607386; }
+.topic-student-meta b { color: var(--ink, #14283c); font-size: var(--text-lg, 1.1rem); }
+.topic-student-caret { transition: transform .16s ease; color: #718397; }
+.topic-student[open] .topic-student-caret { transform: rotate(180deg); }
+.topic-student .decision-timeline { margin: 0; padding: 4px 16px 16px; list-style: none; }
+.topic-choice { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; }
+.topic-choice-step { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; color: #fff; background: var(--blue); font-size: var(--text-xs); font-weight: 700; }
+.topic-choice strong { display: block; font-size: var(--text-sm); }
+.topic-choice-answer { margin: 4px 0 0; color: #405468; font-size: var(--text-sm); line-height: 1.45; }
+.topic-choice-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: #8190a0; font-size: var(--text-xs); }
+.topic-empty { margin: 0; padding: 12px 16px 16px; color: #8190a0; font-size: var(--text-sm); }
+@media (max-width: 720px) { .topic-student summary { grid-template-columns: minmax(0, 1fr) 20px; } .topic-student-meta { grid-column: 1 / -1; justify-content: flex-start; } }
 .progress-detail-grid { display: grid; grid-template-columns: minmax(280px, .7fr) minmax(0, 1.3fr); gap: 16px; }
 .mistake-card h2, .recommendation-card h2 { margin-top: 15px; }
 .mistake-card > p, .recommendation-card > p { font-size: var(--text-base); }
