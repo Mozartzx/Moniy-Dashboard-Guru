@@ -10,7 +10,7 @@ const faqs = [
   { q: 'Bagaimana cara kerja Perisai?', a: 'Nyalakan Perisai di aplikasi, dan situs judi online yang kamu buka akan diblokir. Moniy hanya mencatat bahwa ada percobaan, bukan siapa pelakunya.' },
   { q: 'Apa itu Moniy AI?', a: 'Fitur yang mengubah ceritamu jadi modul. Kamu ketik idenya, misalnya buka warung kopi di sekolah, lalu Moniy AI menyusun pilihan dan kejadiannya.' },
   { q: 'Apakah siswa perlu login ke dashboard guru?', a: 'Tidak. Dashboard hanya untuk guru. Siswa belajar lewat aplikasi Moniy di ponsel.' },
-  { q: 'Di mana saya bisa mengunduh aplikasinya?', a: 'Belum dirilis. Begitu ada, tombol "Unduh aplikasi" di halaman ini langsung mengarah ke sana.' },
+  { q: 'Di mana saya bisa mengunduh aplikasinya?', a: 'Tombol "Unduh aplikasi" di halaman ini mengarah ke folder unduhan Moniy di Google Drive.' },
 ];
 
 export function FaqSection() {
