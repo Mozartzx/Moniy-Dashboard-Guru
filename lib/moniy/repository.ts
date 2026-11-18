@@ -148,8 +148,9 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       // Progres dihitung per chapter (8 topik), bukan per modul varian, supaya x/8 bermakna.
       const topicOfModule = new Map(moduleRows.map((item) => [item.id, item.topic_id]));
       const completedTopics = new Set(studentProgress.filter((item) => (item.progress ?? 0) >= 1).map((item) => topicOfModule.get(item.module_id))).size;
-      const quizScores = scoresByStudent.get(row.id) ?? [];
-      const scores = quizScores.length ? quizScores : studentProgress.filter((item) => item.score != null).map((item) => item.score as number);
+      // Nilai siswa = rata-rata nilai cerita yang selesai (sama dengan halaman detail siswa); hasil kuis hanya cadangan.
+      const storyScores = studentProgress.filter((item) => item.score != null).map((item) => item.score as number);
+      const scores = storyScores.length ? storyScores : (scoresByStudent.get(row.id) ?? []);
       const score = scores.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length) : null;
       const initials = row.name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase();
       const inProgressModule = studentProgress.find((item) => (item.progress ?? 0) < 1 && (item.progress ?? 0) > 0);
@@ -191,9 +192,8 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       const quizScores = quizzes
         .filter((row) => row.score != null && quizTopicById.get(row.quiz_id) === topic.id)
         .map((row) => row.score as number);
-      const scored = quizScores.length
-        ? quizScores
-        : relevantProgress.filter((row) => row.score != null).map((row) => row.score as number);
+      const storyScored = relevantProgress.filter((row) => row.score != null).map((row) => row.score as number);
+      const scored = storyScored.length ? storyScored : quizScores;
       const average = scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : 0;
 
       const topicLog = answerLog.filter((entry) => quizTopicById.get(entry.quiz_id) === topic.id);
@@ -229,7 +229,8 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       };
     });
 
-    const allScores = [...quizzes.map((row) => row.score), ...progress.map((row) => row.score)].filter((value): value is number => value != null);
+    const storyAll = progress.map((row) => row.score).filter((value): value is number => value != null);
+    const allScores = storyAll.length ? storyAll : quizzes.map((row) => row.score).filter((value): value is number => value != null);
     const averageScore = allScores.length ? Math.round((allScores.reduce((sum, value) => sum + value, 0) / allScores.length) * 10) / 10 : 0;
     const completionRate = progress.length ? Math.round((progress.filter((row) => (row.progress ?? 0) >= 1).length / progress.length) * 100) : 0;
     const supportCount = students.filter((student) => student.needsSupport).length;
