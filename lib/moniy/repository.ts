@@ -7,6 +7,8 @@ import type {
   CommunityPost,
   DashboardQuery,
   LearningDecision,
+  DecisionRankItem,
+  ReflectionArchiveItem,
   RiskTrend,
   StudentConclusion,
   StudentReflection,
@@ -82,7 +84,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         .lte('detected_at', to.toISOString()),
       supabase
         .from('community_posts')
-        .select('id, content, reviewed, created_at, community_groups!inner(class_id), users(name)')
+        .select('id, content, reviewed, teacher_note, created_at, community_groups!inner(class_id), users(name)')
         .eq('community_groups.class_id', classId)
         .order('created_at', { ascending: false }),
       supabase.from('quizzes').select('id, topic_id'),
@@ -110,7 +112,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
     const gamblingEvents = gamblingRows ?? [];
     const currentPeriodEvents = gamblingEvents.filter((event) => new Date(event.detected_at) >= from);
     const previousPeriodEvents = gamblingEvents.filter((event) => new Date(event.detected_at) < from);
-    const posts = (postRows ?? []) as unknown as Array<{ id: number; content: string; reviewed: boolean; created_at: string; users: { name: string } | null }>;
+    const posts = (postRows ?? []) as unknown as Array<{ id: number; content: string; reviewed: boolean; teacher_note: string | null; created_at: string; users: { name: string } | null }>;
 
     const totalChapters = topicRows.length;
 
@@ -255,6 +257,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         summary: post.content,
         submittedAt: format(new Date(post.created_at), "d MMM, HH.mm", { locale: idLocale }),
         reviewed: post.reviewed,
+        teacherNote: post.teacher_note ?? '',
       };
     });
 
@@ -419,9 +422,97 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
     };
   }
 
-  async markCommunityPostReviewed(postId: string): Promise<void> {
+  // Arsip refleksi tingkat kelas: semua refleksi dan kesimpulan siswa, terbaru dulu (disaring dan diurutkan di halaman).
+  async getReflectionArchive(classId: string): Promise<ReflectionArchiveItem[]> {
     const supabase = createClient();
-    await supabase.from('community_posts').update({ reviewed: true }).eq('id', Number(postId));
+    const [{ data: users }, { data: topics }, { data: modules }] = await Promise.all([
+      supabase.from('users').select('id, name').eq('class_id', classId).eq('role', 'student'),
+      supabase.from('module_topics').select('id, title').not('chapter', 'is', null),
+      supabase.from('modules').select('id, title, topic_id'),
+    ]);
+    const userById = new Map((users ?? []).map((row) => [row.id as number, row.name as string]));
+    const ids = [...userById.keys()];
+    if (!ids.length) return [];
+    const topicTitle = new Map((topics ?? []).map((row) => [row.id as number, row.title as string]));
+    const moduleById = new Map((modules ?? []).map((row) => [row.id as number, row as { id: number; title: string; topic_id: number }]));
+    const [{ data: reflections }, { data: conclusions }] = await Promise.all([
+      supabase.from('story_reflections').select('id, user_id, module_id, kind, impact_label, why, do_differently, ai_feedback, ai_insight, created_at').in('user_id', ids).order('created_at', { ascending: false }).limit(600),
+      supabase.from('story_conclusions').select('id, user_id, module_id, attempt, text, level, ai_feedback, ai_reinforcement, created_at').in('user_id', ids).order('created_at', { ascending: false }).limit(600),
+    ]);
+    const base = (userId: number, moduleId: number, createdAt: string) => {
+      const name = userById.get(userId) ?? 'Siswa';
+      const mod = moduleById.get(moduleId);
+      return {
+        studentId: String(userId),
+        studentName: name,
+        initials: name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase(),
+        chapter: (mod && topicTitle.get(mod.topic_id)) ?? 'Chapter',
+        moduleTitle: mod?.title ?? 'Cerita',
+        createdAt,
+        time: format(new Date(createdAt), 'd MMM yyyy, HH.mm', { locale: idLocale }),
+      };
+    };
+    const items: ReflectionArchiveItem[] = [
+      ...(reflections ?? []).map((row): ReflectionArchiveItem => ({
+        id: `r${row.id}`,
+        kind: 'refleksi',
+        ...base(row.user_id, row.module_id, row.created_at),
+        reflection: { kind: row.kind, mostImpactful: row.impact_label, why: row.why, doDifferently: row.do_differently, aiFeedback: row.ai_feedback, aiInsight: row.ai_insight },
+      })),
+      ...(conclusions ?? []).map((row): ReflectionArchiveItem => ({
+        id: `k${row.id}`,
+        kind: 'kesimpulan',
+        ...base(row.user_id, row.module_id, row.created_at),
+        conclusion: { attempt: row.attempt, text: row.text, level: row.level, aiFeedback: row.ai_feedback, aiReinforcement: row.ai_reinforcement },
+      })),
+    ];
+    return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  // Peringkat keputusan tersulit kelas dari riwayat story_journeys: persentase pilihan cerdas per pertanyaan, terendah dulu (minimal 3 jawaban).
+  async getDecisionRank(classId: string): Promise<DecisionRankItem[]> {
+    const supabase = createClient();
+    const [{ data: users }, { data: topics }, { data: modules }] = await Promise.all([
+      supabase.from('users').select('id').eq('class_id', classId).eq('role', 'student'),
+      supabase.from('module_topics').select('id, title').not('chapter', 'is', null),
+      supabase.from('modules').select('id, topic_id'),
+    ]);
+    const ids = (users ?? []).map((row) => row.id as number);
+    if (!ids.length) return [];
+    const topicTitle = new Map((topics ?? []).map((row) => [row.id as number, row.title as string]));
+    const chapterOfModule = new Map<number, string>();
+    for (const row of modules ?? []) {
+      const title = topicTitle.get(row.topic_id as number);
+      if (title) chapterOfModule.set(row.id as number, title);
+    }
+    const { data: journeys } = await supabase.from('story_journeys').select('module_id, state').in('user_id', ids);
+    const stats = new Map<string, DecisionRankItem>();
+    for (const journey of (journeys ?? []) as Array<{ module_id: number; state: { history?: Array<{ question?: string; verdict?: string }> } | null }>) {
+      const chapter = chapterOfModule.get(journey.module_id);
+      if (!chapter) continue;
+      for (const entry of journey.state?.history ?? []) {
+        if (!entry.question) continue;
+        const key = `${journey.module_id}::${entry.question}`;
+        const stat = stats.get(key) ?? { question: entry.question, chapter, total: 0, correct: 0, correctRate: 0 };
+        stat.total += 1;
+        if (entry.verdict === 'cerdas') stat.correct += 1;
+        stats.set(key, stat);
+      }
+    }
+    return [...stats.values()]
+      .filter((stat) => stat.total >= MIN_ATTEMPTS)
+      .map((stat) => ({ ...stat, correctRate: Math.round((stat.correct / stat.total) * 100) }))
+      .sort((a, b) => a.correctRate - b.correctRate || b.total - a.total)
+      .slice(0, 8);
+  }
+
+  async markCommunityPostReviewed(postId: string, note?: string, reviewed = true): Promise<void> {
+    const supabase = createClient();
+    const patch: { reviewed?: boolean; teacher_note?: string | null } = {};
+    if (reviewed) patch.reviewed = true;
+    if (note !== undefined) patch.teacher_note = note.trim() ? note.trim().slice(0, 1000) : null;
+    const { error } = await supabase.from('community_posts').update(patch).eq('id', Number(postId));
+    if (error) throw new Error(error.message);
   }
 }
 

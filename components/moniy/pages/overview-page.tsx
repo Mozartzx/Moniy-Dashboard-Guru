@@ -12,6 +12,7 @@ import {
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
 import { BrowserNavigationLink } from '@/components/moniy/browser-navigation-link';
 import { EmptyState } from './page-primitives';
+import { LearningInsightCard } from './learning-insight';
 
 export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSnapshot; teacherName?: string }) {
   const pendingPosts = snapshot.communityPosts.filter((post) => !post.reviewed).slice(0, 2);
@@ -48,6 +49,8 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
         </article>
 
       </section>
+
+      <section className="overview-grid overview-single"><LearningInsightCard classId={snapshot.classId} /></section>
 
       <section className="overview-grid lower-overview-grid">
         <article className="surface-card compact-card">

@@ -14,13 +14,13 @@ const VERDICT: Record<TopicChoice['verdict'], { label: string; chip: string }> =
   buruk: { label: 'Kurang tepat', chip: 'status-not-started' },
 };
 
-const LEVEL: Record<NonNullable<StudentConclusion['level']>, { label: string; chip: string }> = {
+export const LEVEL: Record<NonNullable<StudentConclusion['level']>, { label: string; chip: string }> = {
   tepat: { label: 'Tepat', chip: 'status-done' },
   hampir: { label: 'Hampir tepat', chip: 'status-progress' },
   perlu_penguatan: { label: 'Perlu penguatan', chip: 'status-not-started' },
 };
 
-function Exchange({ title, student, ai }: { title: string; student: string | null; ai: string | null }) {
+export function Exchange({ title, student, ai }: { title: string; student: string | null; ai: string | null }) {
   if (!student && !ai) return null;
   return (
     <div className="exchange">

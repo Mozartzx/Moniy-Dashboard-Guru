@@ -16,7 +16,7 @@ type DashboardContextValue = {
   reloadSession: () => Promise<void>;
   toast: string;
   notify: (message: string, duration?: number) => void;
-  reviewCommunityPost: (postId: string) => Promise<void>;
+  reviewCommunityPost: (postId: string, note?: string, reviewed?: boolean) => Promise<void>;
   /** Mode fokus: sidebar dan kontrol topbar disembunyikan, hanya logo dan profil. */
   focusMode: boolean;
   /** Aksi tombol Kembali di mode fokus (menggantikan logo). */
@@ -68,9 +68,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     reloadSession,
     toast,
     notify,
-    reviewCommunityPost: async (postId) => {
-      await dashboard.markPostReviewed(postId);
-      notify('Postingan ditandai sudah ditinjau.');
+    reviewCommunityPost: async (postId, note, reviewed = true) => {
+      try {
+        await dashboard.markPostReviewed(postId, note, reviewed);
+        notify(reviewed ? 'Postingan ditandai sudah ditinjau.' : 'Catatan guru tersimpan.');
+      } catch {
+        notify('Catatan belum tersimpan. Coba lagi.');
+        throw new Error('save-failed');
+      }
     },
     focusMode: focus.on,
     focusBack: focus.back,

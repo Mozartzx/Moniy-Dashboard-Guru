@@ -137,6 +137,11 @@ export const questApi = {
   remove: (id: number) => call<unknown>('DELETE', `/quest/${id}`),
 };
 
+/** Insight pembelajaran (Contextual Prompting): pola keputusan, refleksi, dan kesimpulan kelas dirangkum Gemini di backend. */
+export async function fetchLearningInsight(classId: string, refresh = false): Promise<import('./types').LearningInsight> {
+  return call<import('./types').LearningInsight>('GET', `/progress/class/${encodeURIComponent(classId)}/learning-insight${refresh ? '?refresh=1' : ''}`);
+}
+
 export type ClassInsight = { available: boolean; summary: string; patterns: { question: string; total: number; correct: number; correctPercent: number }[] };
 
 /** Rangkuman dan saran tindak lanjut untuk guru, disusun Gemini di backend dari pola jawaban kelas. */

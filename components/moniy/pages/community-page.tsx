@@ -12,18 +12,26 @@ const filters = [
   { value: 'all', label: 'Semua' },
 ] as const;
 
-export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnapshot; onReview: (postId: string) => Promise<void> }) {
+export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnapshot; onReview: (postId: string, note?: string, reviewed?: boolean) => Promise<void> }) {
   const [filter, setFilter] = useState<'pending' | 'reviewed' | 'all'>('pending');
   const [selected, setSelected] = useState<CommunityPost | null>(null);
   const [saving, setSaving] = useState(false);
+  const [note, setNote] = useState('');
+  const open = (post: CommunityPost) => { setSelected(post); setNote(post.teacherNote); };
   const posts = snapshot.communityPosts.filter((post) => filter === 'all' || (filter === 'pending' ? !post.reviewed : post.reviewed));
 
   const markReviewed = async () => {
     if (!selected) return;
     setSaving(true);
-    await onReview(selected.id);
+    try { await onReview(selected.id, note, true); setSelected(null); } catch { /* pesan gagal sudah ditampilkan */ }
     setSaving(false);
-    setSelected(null);
+  };
+
+  const saveNote = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try { await onReview(selected.id, note, false); setSelected({ ...selected, teacherNote: note.trim() }); } catch { /* pesan gagal sudah ditampilkan */ }
+    setSaving(false);
   };
 
   return (
@@ -41,7 +49,7 @@ export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnaps
           <div className="community-card-head"><span className="student-avatar large">{post.initials}</span><div><strong>{post.studentName}</strong><span>{post.submittedAt}</span></div><span className={post.reviewed ? 'status-chip status-done' : 'status-chip status-not-started'}>{post.reviewed ? 'Sudah ditinjau' : 'Belum ditinjau'}</span></div>
           <div className="business-visual"><span><FileSpreadsheet size={35} /></span><small>{post.businessType}</small></div>
           <h2>{post.title}</h2><p>{post.epilogue}</p>
-          <button className={post.reviewed ? 'secondary-button' : 'primary-button'} type="button" onClick={() => setSelected(post)}>{post.reviewed ? 'Buka hasil' : 'Tinjau hasil'} <ArrowRight size={17} /></button>
+          <button className={post.reviewed ? 'secondary-button' : 'primary-button'} type="button" onClick={() => open(post)}>{post.reviewed ? 'Buka hasil' : 'Tinjau hasil'} <ArrowRight size={17} /></button>
         </article>
       ))}</section> : <div className="surface-card filter-swap" key={filter}><EmptyState title="Tidak ada postingan" description="Tidak ada hasil komunitas untuk filter ini." /></div>}
 
@@ -53,9 +61,8 @@ export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnaps
             <DialogTitle id="community-detail-title">{selected.title}</DialogTitle>
             <DialogDescription className="modal-lead">{selected.studentName} | {selected.businessType}</DialogDescription>
             <div className="modal-result"><CheckCircle2 size={23} /><div><strong>{selected.epilogue}</strong><p>{selected.summary}</p></div></div>
-            <div className="modal-section"><h3>Catatan guru</h3><textarea aria-label="Catatan guru" placeholder="Tulis umpan balik untuk hasil ini..." rows={4} /></div>
-            <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setSelected(null)}>Tutup</button>{!selected.reviewed ? <button className="primary-button" type="button" onClick={markReviewed} disabled={saving}>{saving ? 'Menyimpan...' : 'Tandai sudah ditinjau'}</button> : null}</div>
-            <small className="mock-modal-note">Catatan guru di atas belum tersimpan ke server.</small>
+            <div className="modal-section"><h3>Catatan guru</h3><textarea aria-label="Catatan guru" placeholder="Tulis umpan balik untuk hasil ini..." rows={4} maxLength={1000} value={note} onChange={(event) => setNote(event.target.value)} /></div>
+            <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setSelected(null)}>Tutup</button><button className="secondary-button" type="button" onClick={saveNote} disabled={saving || note.trim() === selected.teacherNote}>{saving ? 'Menyimpan...' : 'Simpan catatan'}</button>{!selected.reviewed ? <button className="primary-button" type="button" onClick={markReviewed} disabled={saving}>{saving ? 'Menyimpan...' : 'Tandai sudah ditinjau'}</button> : null}</div>
           </DialogContent>
         ) : null}
       </Dialog>

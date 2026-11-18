@@ -109,6 +109,39 @@ export type StudentReport = {
   stories: StudentStory[];
 };
 
+export type ReflectionArchiveItem = {
+  id: string;
+  kind: 'refleksi' | 'kesimpulan';
+  studentId: string;
+  studentName: string;
+  initials: string;
+  chapter: string;
+  moduleTitle: string;
+  createdAt: string;
+  time: string;
+  reflection?: Pick<StudentReflection, 'kind' | 'mostImpactful' | 'why' | 'doDifferently' | 'aiFeedback' | 'aiInsight'>;
+  conclusion?: Pick<StudentConclusion, 'attempt' | 'text' | 'level' | 'aiFeedback' | 'aiReinforcement'>;
+};
+
+export type DecisionRankItem = {
+  question: string;
+  chapter: string;
+  total: number;
+  correct: number;
+  correctRate: number;
+};
+
+export type LearningInsight = {
+  available: boolean;
+  message?: string;
+  generatedAt?: string;
+  cached?: boolean;
+  basis?: { students: number; reflections: number; conclusions: number; decisions: number };
+  summary?: string;
+  findings?: { title: string; detail: string }[];
+  actions?: { title: string; detail: string }[];
+};
+
 export type RiskTrend = {
   label: string;
   events: number;
@@ -124,6 +157,7 @@ export type CommunityPost = {
   summary: string;
   submittedAt: string;
   reviewed: boolean;
+  teacherNote: string;
 };
 
 export type ClassroomSnapshot = {
@@ -154,5 +188,7 @@ export interface TeacherDashboardRepository {
   getSnapshot(query: DashboardQuery): Promise<ClassroomSnapshot>;
   getTopicReport(classId: string, topicId: string): Promise<TopicReport>;
   getStudentReport(classId: string, studentId: string): Promise<StudentReport>;
-  markCommunityPostReviewed(postId: string): Promise<void>;
+  getReflectionArchive(classId: string): Promise<ReflectionArchiveItem[]>;
+  getDecisionRank(classId: string): Promise<DecisionRankItem[]>;
+  markCommunityPostReviewed(postId: string, note?: string, reviewed?: boolean): Promise<void>;
 }

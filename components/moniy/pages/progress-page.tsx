@@ -2,8 +2,9 @@
 
 import { CircleAlert, Sparkles } from 'lucide-react';
 import { errText, fetchClassInsight } from '@/lib/moniy/quest-api';
-import { useState } from 'react';
-import type { ClassroomSnapshot } from '@/lib/moniy/types';
+import { useEffect, useState } from 'react';
+import { teacherDashboardRepository } from '@/lib/moniy/repository';
+import type { ClassroomSnapshot, DecisionRankItem } from '@/lib/moniy/types';
 import { useDashboardContext } from '@/components/moniy/dashboard/dashboard-context';
 import { EmptyState } from './page-primitives';
 import { TopicDetail } from './topic-detail';
@@ -14,7 +15,14 @@ export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
   const [detailTopicId, setDetailTopicId] = useState<string | null>(null);
   const [material, setMaterial] = useState<string | null>(null);
   const [loadingMaterial, setLoadingMaterial] = useState(false);
+  const [rank, setRank] = useState<DecisionRankItem[] | null>(null);
   const { notify } = useDashboardContext();
+  const rankClassId = snapshot.classId;
+  useEffect(() => {
+    let active = true;
+    teacherDashboardRepository.getDecisionRank(rankClassId).then((data) => { if (active) setRank(data); }, () => { if (active) setRank([]); });
+    return () => { active = false; };
+  }, [rankClassId]);
   const prepareMaterial = async () => {
     setLoadingMaterial(true);
     try {
@@ -39,6 +47,15 @@ export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
       <article className="surface-card data-table-card">
         <div className="section-heading-row"><div><h2>Ringkasan per topik</h2><p>Pilih satu baris untuk membuka nilai, ketercapaian target, dan pilihan tiap siswa.</p></div></div>
         {visibleTopics.length ? <div className="table-scroll"><table className="data-table"><thead><tr><th>Topik</th><th>Belum</th><th>Berjalan</th><th>Selesai</th><th>Nilai siswa</th><th>Jawaban benar</th></tr></thead><tbody>{visibleTopics.map((topic) => <tr key={topic.id} className={selected?.id === topic.id ? 'selected-row' : ''}><td><button className="topic-row-button" type="button" onClick={() => { setSelectedTopicId(topic.id); setDetailTopicId(topic.id); }} aria-label={`Buka detail ${topic.name}`}><strong>{topic.name}</strong>{topic.category !== topic.name ? <span>{topic.category}</span> : null}</button></td><td>{topic.notStarted}</td><td>{topic.inProgress}</td><td>{topic.completed}</td><td><b>{topic.quizAverage}</b></td><td><div className="table-rate"><span>{topic.correctRate}%</span><progress max={100} value={topic.correctRate} aria-label={`Jawaban benar ${topic.correctRate}%`} /></div></td></tr>)}</tbody></table></div> : <EmptyState title="Belum ada data topik" description="Coba pilih kelas atau periode lain." />}
+      </article>
+
+      <article className="surface-card data-table-card">
+        <div className="section-heading-row"><div><h2>Keputusan paling sulit di kelas</h2><p>Peringkat dari persentase pilihan cerdas yang diambil siswa. Makin rendah, makin banyak siswa yang keliru.</p></div></div>
+        {rank === null ? <p className="topic-empty">Memuat peringkat...</p> : rank.length ? <ol className="rank-list">{rank.map((item, index) => <li key={`${item.chapter}-${item.question}`}>
+          <span className="rank-no">{index + 1}</span>
+          <div className="rank-main"><strong>{item.question}</strong><small>{item.chapter} | {item.total} jawaban</small></div>
+          <div className="rank-rate"><b>{item.correctRate}%</b><progress max={100} value={item.correctRate} aria-label={`Pilihan cerdas ${item.correctRate}%`} /></div>
+        </li>)}</ol> : <EmptyState title="Belum cukup data" description="Peringkat muncul setelah tiap keputusan dijawab minimal 3 siswa." />}
       </article>
 
       {selected ? <section className="progress-detail-grid">

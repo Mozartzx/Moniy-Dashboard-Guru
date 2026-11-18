@@ -40,11 +40,13 @@ export function useMoniyDashboard(classIds: string[]) {
     return () => window.clearTimeout(timer);
   }, [load, classId]);
 
-  const markPostReviewed = useCallback(async (postId: string) => {
-    await teacherDashboardRepository.markCommunityPostReviewed(postId);
+  const markPostReviewed = useCallback(async (postId: string, note?: string, reviewed = true) => {
+    await teacherDashboardRepository.markCommunityPostReviewed(postId, note, reviewed);
     setSnapshot((current) => current ? {
       ...current,
-      communityPosts: current.communityPosts.map((post) => post.id === postId ? { ...post, reviewed: true } : post),
+      communityPosts: current.communityPosts.map((post) => post.id === postId
+        ? { ...post, reviewed: reviewed ? true : post.reviewed, teacherNote: note !== undefined ? note.trim() : post.teacherNote }
+        : post),
     } : current);
   }, []);
 
