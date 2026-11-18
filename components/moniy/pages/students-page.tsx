@@ -31,7 +31,7 @@ export function StudentsPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
 function StudentRow({ student, onSelect }: { student: Student; onSelect: () => void }) {
   return (
     <button className="student-list-row" type="button" onClick={onSelect} aria-label={`Buka detail ${student.name}`}>
-      <span className="student-avatar">{student.initials}</span><span className="student-main"><strong>{student.name}</strong><small>{student.activeModule}</small></span><span className={statusClass(student.status)}>{student.status}</span><span className="student-score">{student.score ?? '-'}</span><ChevronRight size={17} />
+      <span className="student-avatar">{student.initials}</span><span className="student-main"><strong>{student.name}</strong><small>{student.activeModule}</small></span><span className={statusClass(student.status)}>{student.status}</span><span className="student-score" title="Nilai siswa: rata-rata nilai cerita yang dikerjakan"><small>Nilai</small>{student.score ?? '-'}</span><ChevronRight size={17} />
     </button>
   );
 }

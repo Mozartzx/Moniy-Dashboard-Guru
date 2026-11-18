@@ -174,17 +174,16 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       const moduleIds = new Set(modulesInTopic.map((module) => module.id));
       const relevantProgress = progress.filter((row) => moduleIds.has(row.module_id));
 
+      // Dihitung per siswa (bukan per modul varian): selesai bila ada modul di topik ini yang tamat,
+      // berjalan bila baru ada yang dimulai, selain itu belum. Totalnya sama dengan jumlah siswa.
       let notStarted = 0;
       let inProgress = 0;
       let completed = 0;
       for (const studentId of studentIds) {
-        for (const moduleId of moduleIds) {
-          const row = relevantProgress.find((item) => item.user_id === studentId && item.module_id === moduleId);
-          const value = row?.progress ?? 0;
-          if (value >= 1) completed += 1;
-          else if (value > 0) inProgress += 1;
-          else notStarted += 1;
-        }
+        const mine = relevantProgress.filter((item) => item.user_id === studentId);
+        if (mine.some((item) => (item.progress ?? 0) >= 1)) completed += 1;
+        else if (mine.some((item) => (item.progress ?? 0) > 0)) inProgress += 1;
+        else notStarted += 1;
       }
 
       const quizScores = quizzes

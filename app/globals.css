@@ -745,3 +745,4 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .guide-steps strong { display: block; margin-bottom: 2px; color: var(--navy); }
 .guide-list { margin: 0; padding-left: 20px; color: #405468; font-size: var(--text-sm); line-height: 1.6; }
 .guide-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+.student-score small { margin-right: 6px; color: var(--muted); font-size: var(--text-xs); font-weight: 500; }
