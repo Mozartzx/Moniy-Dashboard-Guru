@@ -42,6 +42,8 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
         })}
       </section>
 
+      <section className="overview-grid overview-single"><LearningInsightCard classId={snapshot.classId} /></section>
+
       <section className="overview-grid overview-single">
         <article className="surface-card topic-overview-card">
           <div className="section-heading-row"><div><h2>Progres per topik</h2><p>Lihat tingkat penyelesaian dan penguasaan kelas.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/progres-belajar">Buka detail <ChevronRight size={17} /></BrowserNavigationLink></div>
@@ -49,8 +51,6 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
         </article>
 
       </section>
-
-      <section className="overview-grid overview-single"><LearningInsightCard classId={snapshot.classId} /></section>
 
       <section className="overview-grid lower-overview-grid">
         <article className="surface-card compact-card">
