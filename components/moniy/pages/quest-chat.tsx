@@ -92,6 +92,8 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const [reply, setReply] = useState('');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [ideaError, setIdeaError] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [pickedVersion, setPickedVersion] = useState<number | null>(null);
   const [resuming, setResuming] = useState(resumeId !== null);
@@ -195,11 +197,23 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
 
   const addUser = (text: string) => setTurns((prev) => [...prev, { id: nextId.current++, role: 'user', text }]);
 
-  const start = () => {
+  // Guardrail lebih dulu di formulir: ide yang ditolak tidak pernah membuka halaman chat. Bila pemeriksaan sendiri
+  // tidak terjangkau (jaringan atau server lama), alur tetap jalan dan server memeriksa ulang di dalam chat.
+  const start = async () => {
     const text = idea.trim();
+    if (checking || !topicId || text.length < 10) return;
+    setIdeaError('');
+    setChecking(true);
+    let guarded = false;
+    try {
+      const verdict = await questApi.guard(Number(topicId), text);
+      if (!verdict.ok) { setIdeaError(verdict.message ?? 'Ide ceritamu belum bisa diproses. Perbaiki lalu coba lagi.'); setChecking(false); return; }
+      guarded = true;
+    } catch { /* lanjut: server memeriksa ulang */ }
+    setChecking(false);
     addUser(text);
     // Kerangka yang baru jadi langsung dilanjutkan ke simulasi lengkap, tanpa menunggu persetujuan.
-    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text }, on), { chained: true })
+    void run('kerangka', (on) => questApi.outlineStream({ topicId: Number(topicId), prompt: text, guarded }, on), { chained: true })
       .then(({ id, outline }) => { if (outline) approve(outline, text, id); });
   };
   const revise = () => {
@@ -244,17 +258,18 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     const len = idea.trim().length;
     return (
       <section className="surface-card">
-        <form className="module-form" onSubmit={(e) => { e.preventDefault(); start(); }}>
+        <form className="module-form" onSubmit={(e) => { e.preventDefault(); void start(); }}>
           <div className="field-group">Topik
             <FormSelect label="Topik" value={topicId} options={topics.map((t) => ({ value: String(t.id), label: t.title }))} onValueChange={setPickedTopic} disabled={!topics.length} />
           </div>
           <label className="field-group">Ide cerita
-            <textarea className="module-textarea" rows={4} maxLength={300} value={idea} onChange={(e) => setIdea(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (topicId && idea.trim().length >= 10) start(); } }} placeholder={`Contoh: ${exampleFor(topicLabel)}`} />
+            <textarea className="module-textarea" rows={4} maxLength={300} value={idea} onChange={(e) => { setIdea(e.target.value); if (ideaError) setIdeaError(''); }} aria-invalid={!!ideaError} disabled={checking}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (topicId && idea.trim().length >= 10) void start(); } }} placeholder={`Contoh: ${exampleFor(topicLabel)}`} />
             <span className="field-hint">Tulis tokoh, dilema utama, rentang waktu, dan konsep yang ingin diajarkan. {len}/300, minimal 10 karakter. Enter untuk kirim, Shift+Enter untuk baris baru.</span>
           </label>
+          {ideaError ? <p className="field-error" role="alert">{ideaError}</p> : null}
           <div className="module-form-actions">
-            <button className="primary-button" type="submit" disabled={!topicId || len < 10}><Send size={18} /> Buat simulasi</button>
+            <button className="primary-button" type="submit" disabled={!topicId || len < 10 || checking}>{checking ? <><Loader2 size={18} className="module-spin" /> Guardrail memeriksa ide ceritamu</> : <><Send size={18} /> Buat simulasi</>}</button>
           </div>
         </form>
       </section>

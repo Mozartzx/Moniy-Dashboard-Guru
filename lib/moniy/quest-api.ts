@@ -111,9 +111,11 @@ export const questApi = {
     const { data } = await createClient().from('module_topics').select('id, title, chapter').not('chapter', 'is', null).order('chapter');
     return ((data ?? []) as { id: number; title: string; chapter: number }[]).map((t) => ({ id: t.id, title: `Chapter ${t.chapter}: ${t.title}` }));
   },
+  /** Guardrail ide cerita di formulir, sebelum masuk ke halaman chat. */
+  guard: (topicId: number, prompt: string) => call<{ ok: boolean; message?: string }>('POST', '/quest/guard', { topicId, prompt }),
   mine: () => call<QuestSummary[]>('GET', '/quest/mine'),
   get: (id: number) => call<Quest>('GET', `/quest/${id}`),
-  outlineStream: (body: { topicId?: number; prompt?: string; questId?: number; outline?: Outline; instruction?: string; history?: { role: 'guru' | 'moni'; text: string }[] }, onEvent: (e: StreamEvent) => void) =>
+  outlineStream: (body: { topicId?: number; prompt?: string; guarded?: boolean; questId?: number; outline?: Outline; instruction?: string; history?: { role: 'guru' | 'moni'; text: string }[] }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/outline/stream', body, onEvent),
   draftStream: (body: { topicId: number; prompt: string; outline: Outline }, onEvent: (e: StreamEvent) => void) =>
     stream('/quest/drafts/stream', body, onEvent),
