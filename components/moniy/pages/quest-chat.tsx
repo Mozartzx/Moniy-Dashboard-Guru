@@ -150,6 +150,10 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
   const latestOutline = versions[versions.length - 1];
   const shownVersion = Math.min(pickedVersion ?? versions.length - 1, versions.length - 1);
   const doneInfo = aiTurns.find((t) => t.done)?.done ?? null;
+  // Giliran AI terakhir menentukan tombol: gagal -> perbaiki atau coba lagi; kerangka baru hasil revisi -> setujui.
+  const lastAi = aiTurns[aiTurns.length - 1];
+  const failed = !!lastAi?.error && !lastAi.running && !doneInfo;
+  const awaitingApproval = !!lastAi?.outline && !lastAi.error && !lastAi.running && !lastAi.chained && !doneInfo;
   // Kerangka sedang dilanjutkan ke simulasi (otomatis); berhenti bila selesai atau gagal.
   const building = aiTurns.some((t) => t.chained && !t.done && !t.error);
   useEffect(() => {
@@ -227,6 +231,10 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     const last = prev.map((t, i) => (t.role === 'ai' && t.outline ? i : -1)).filter((i) => i >= 0).pop();
     return prev.map((t, i) => (i === last && t.role === 'ai' ? { ...t, outline: next } : t));
   });
+  // Generate simulasi gagal setelah kerangka jadi: ulangi dari kerangka yang sama tanpa menyetujui apa pun lagi.
+  const retryDraft = () => { if (latestOutline && !busy) void run('simulasi', (on) => questApi.draftStream({ topicId: Number(topicId), prompt: idea.trim(), outline: latestOutline }, on)); };
+  // Ide ditolak guardrail atau kerangka gagal: kembali ke formulir dengan ide yang sama supaya bisa diperbaiki.
+  const reviseIdea = () => { if (!busy) { setTurns([]); setPanelOpen(false); setPickedVersion(null); setReply(''); } };
   const showVersion = (i: number) => { setPickedVersion(i); setPanelOpen(true); };
 
   if (resuming && !active) return <div className="skeleton quest-skeleton" aria-label="Membuka simulasi" />;
@@ -302,7 +310,9 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
           placeholder={doneInfo ? 'Tanya Moniy tentang simulasi ini. Untuk mengubah isi, klik ikon pensil di panel.' : 'Tanya Moniy atau minta perubahan, misalnya: ganti skenario 3 jadi soal bunga tabungan.'} />
         <div className="sim-composer-actions">
           <button className="secondary-button" type="button" onClick={revise} disabled={busy || (!latestOutline && !doneInfo) || reply.trim().length < 2}><Send size={16} /> Kirim</button>
-          {doneInfo || building || busy || !latestOutline ? null : <button className="primary-button" type="button" onClick={() => approve()}>Setujui kerangka dan buat simulasi</button>}
+          {awaitingApproval && !busy ? <button className="primary-button" type="button" onClick={() => approve()}>Setujui kerangka dan buat simulasi</button> : null}
+          {failed && !busy && latestOutline ? <button className="primary-button" type="button" onClick={retryDraft}>Coba buat lagi</button> : null}
+          {failed && !busy && !doneInfo && resumeId === null ? <button className="secondary-button" type="button" onClick={reviseIdea}>Ubah ide cerita</button> : null}
         </div>
       </div>
     </div>
