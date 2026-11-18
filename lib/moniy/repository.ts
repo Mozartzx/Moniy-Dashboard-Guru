@@ -34,9 +34,9 @@ function riskLevelFor(eventCount: number): ClassroomSnapshot['riskLevel'] {
   return 'Rendah';
 }
 
-function statusFor(completed: number, total: number): Student['status'] {
-  if (total === 0 || completed === 0) return completed === 0 ? 'Belum' : 'Berjalan';
-  return completed >= total ? 'Selesai' : 'Berjalan';
+function statusFor(completed: number, total: number, started: boolean): Student['status'] {
+  if (completed === 0) return started ? 'Berjalan' : 'Belum';
+  return total > 0 && completed >= total ? 'Selesai' : 'Berjalan';
 }
 
 class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
@@ -112,7 +112,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
     const previousPeriodEvents = gamblingEvents.filter((event) => new Date(event.detected_at) < from);
     const posts = (postRows ?? []) as unknown as Array<{ id: number; content: string; reviewed: boolean; created_at: string; users: { name: string } | null }>;
 
-    const totalModules = moduleRows.length;
+    const totalChapters = topicRows.length;
 
     const scoresByStudent = new Map<number, number[]>();
     for (const row of quizzes) {
@@ -143,24 +143,27 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
 
     const students: Student[] = studentRows.map((row) => {
       const studentProgress = progressByStudent.get(row.id) ?? [];
-      const completedTopics = studentProgress.filter((item) => (item.progress ?? 0) >= 1).length;
-      const scores = scoresByStudent.get(row.id) ?? [];
+      // Progres dihitung per chapter (8 topik), bukan per modul varian, supaya x/8 bermakna.
+      const topicOfModule = new Map(moduleRows.map((item) => [item.id, item.topic_id]));
+      const completedTopics = new Set(studentProgress.filter((item) => (item.progress ?? 0) >= 1).map((item) => topicOfModule.get(item.module_id))).size;
+      const quizScores = scoresByStudent.get(row.id) ?? [];
+      const scores = quizScores.length ? quizScores : studentProgress.filter((item) => item.score != null).map((item) => item.score as number);
       const score = scores.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length) : null;
       const initials = row.name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase();
       const inProgressModule = studentProgress.find((item) => (item.progress ?? 0) < 1 && (item.progress ?? 0) > 0);
       const latestModuleId = inProgressModule?.module_id ?? studentProgress.at(-1)?.module_id;
       const activeModule = moduleRows.find((module) => module.id === latestModuleId)?.title ?? '-';
-      const needsSupport = score !== null ? score < 70 : completedTopics === 0 && totalModules > 0;
+      const needsSupport = score !== null ? score < 70 : completedTopics === 0 && totalChapters > 0;
 
       return {
         id: String(row.id),
         name: row.name,
         initials,
         activeModule,
-        status: statusFor(completedTopics, totalModules),
+        status: statusFor(completedTopics, totalChapters, studentProgress.some((item) => (item.progress ?? 0) > 0)),
         score,
         completedTopics,
-        totalTopics: totalModules,
+        totalTopics: totalChapters,
         needsSupport,
         decisions: decisionsByStudent.get(row.id) ?? [],
       };
@@ -411,8 +414,8 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       name,
       initials: name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase(),
       score: scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : null,
-      completedTopics: stories.filter((story) => story.status === 'Selesai').length,
-      totalTopics: moduleRows.length,
+      completedTopics: new Set(stories.filter((story) => story.status === 'Selesai').map((story) => story.chapter)).size,
+      totalTopics: topicTitle.size,
       stories,
     };
   }
