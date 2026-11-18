@@ -67,6 +67,48 @@ export type TopicReport = {
   students: TopicStudentReport[];
 };
 
+export type StudentReflection = {
+  kind: 'story' | 'refresh';
+  mostImpactful: string | null;
+  why: string | null;
+  doDifferently: string | null;
+  aiFeedback: string | null;
+  aiInsight: string | null;
+  time: string;
+};
+
+export type StudentConclusion = {
+  attempt: number;
+  text: string;
+  level: 'tepat' | 'hampir' | 'perlu_penguatan' | null;
+  aiFeedback: string | null;
+  aiReinforcement: string | null;
+  time: string;
+};
+
+export type StudentStory = {
+  moduleId: string;
+  title: string;
+  chapter: string;
+  status: LearningStatus;
+  score: number | null;
+  finalCash: number | null;
+  goal: number | null;
+  choices: TopicChoice[];
+  reflections: StudentReflection[];
+  conclusions: StudentConclusion[];
+};
+
+export type StudentReport = {
+  id: string;
+  name: string;
+  initials: string;
+  score: number | null;
+  completedTopics: number;
+  totalTopics: number;
+  stories: StudentStory[];
+};
+
 export type RiskTrend = {
   label: string;
   events: number;
@@ -111,5 +153,6 @@ export type DashboardQuery = {
 export interface TeacherDashboardRepository {
   getSnapshot(query: DashboardQuery): Promise<ClassroomSnapshot>;
   getTopicReport(classId: string, topicId: string): Promise<TopicReport>;
+  getStudentReport(classId: string, studentId: string): Promise<StudentReport>;
   markCommunityPostReviewed(postId: string): Promise<void>;
 }

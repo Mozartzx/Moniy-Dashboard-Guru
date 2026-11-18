@@ -1,6 +1,7 @@
 'use client';
 
 import { CircleAlert, Sparkles } from 'lucide-react';
+import { errText, fetchClassInsight } from '@/lib/moniy/quest-api';
 import { useState } from 'react';
 import type { ClassroomSnapshot } from '@/lib/moniy/types';
 import { useDashboardContext } from '@/components/moniy/dashboard/dashboard-context';
@@ -11,7 +12,21 @@ export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
   const [selectedTopicId, setSelectedTopicId] = useState(snapshot.topics[0]?.id ?? '');
   const [category, setCategory] = useState('semua');
   const [detailTopicId, setDetailTopicId] = useState<string | null>(null);
+  const [material, setMaterial] = useState<string | null>(null);
+  const [loadingMaterial, setLoadingMaterial] = useState(false);
   const { notify } = useDashboardContext();
+  const prepareMaterial = async () => {
+    setLoadingMaterial(true);
+    try {
+      const result = await fetchClassInsight(snapshot.classId);
+      if (result.available) setMaterial(result.summary);
+      else notify(result.summary);
+    } catch (error) {
+      notify(errText(error));
+    } finally {
+      setLoadingMaterial(false);
+    }
+  };
   if (detailTopicId) return <TopicDetail classId={snapshot.classId} topicId={detailTopicId} onBack={() => setDetailTopicId(null)} />;
   const visibleTopics = snapshot.topics.filter((topic) => category === 'semua' || topic.category === category);
   const selected = snapshot.topics.find((topic) => topic.id === selectedTopicId) ?? visibleTopics[0];
@@ -34,9 +49,10 @@ export function ProgressPage({ snapshot }: { snapshot: ClassroomSnapshot }) {
           <div className="answer-split"><span><i className="answer-wrong" /> Salah {selected.mistakeRate}%</span><span><i className="answer-right" /> Benar {100 - selected.mistakeRate}%</span></div>
         </article>
         <article className="surface-card recommendation-card">
-          <div className="insight-topline"><span className="card-icon blue"><Sparkles size={21} /></span><span className="ai-label"><Sparkles size={14} /> Dibantu AI</span></div><h2>Saran tindak lanjut</h2><p>{snapshot.recommendation}</p>
+          <div className="insight-topline"><span className="card-icon blue"><Sparkles size={21} /></span></div><h2>Saran tindak lanjut</h2><p>{snapshot.recommendation}</p>
           <div className="recommendation-steps"><div><span>1</span><p><strong>Bandingkan pilihan</strong>Tampilkan dua skenario dengan tingkat risiko berbeda.</p></div><div><span>2</span><p><strong>Ajak siswa memberi alasan</strong>Fokus pada proses berpikir, bukan hanya jawaban akhir.</p></div></div>
-          <button className="primary-button" type="button" onClick={() => notify('Bahan refleksi otomatis belum tersedia.')}>Siapkan bahan refleksi</button>
+          <button className="primary-button" type="button" disabled={loadingMaterial} onClick={() => void prepareMaterial()}>{loadingMaterial ? 'Menyusun bahan...' : material ? 'Susun ulang bahan refleksi' : 'Siapkan bahan refleksi'}</button>
+          {material ? <div className="reflection-material" aria-live="polite"><h3>Bahan refleksi untuk kelas</h3>{material.split(/\n{2,}/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div> : null}
         </article>
       </section> : null}
     </div>

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 // Default ke API VPS (app.moniy.site): backend itu di-deploy langsung dan mendukung streaming; Vercel hanya berubah saat main aplikasi digabung.
 const REMOTE_API = (process.env.NEXT_PUBLIC_MONIY_API_URL ?? 'https://app.moniy.site/api').replace(/\/$/, '');
 // Di localhost panggilan lewat proxy dev (/moniy-api) karena CORS API hanya mengizinkan moniy.site.
-const apiBase = () => (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? '/moniy-api' : REMOTE_API);
+export const apiBase = () => (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? '/moniy-api' : REMOTE_API);
 
 export type Verdict = 'cerdas' | 'biasa' | 'buruk';
 
@@ -134,3 +134,14 @@ export const questApi = {
   feedback: (id: number, body: { rating: 'up' | 'down'; aspects: FeedbackAspect[]; comment?: string }) => call<{ saved: boolean }>('POST', `/quest/${id}/feedback`, body),
   remove: (id: number) => call<unknown>('DELETE', `/quest/${id}`),
 };
+
+export type ClassInsight = { available: boolean; summary: string; patterns: { question: string; total: number; correct: number; correctPercent: number }[] };
+
+/** Rangkuman dan saran tindak lanjut untuk guru, disusun Gemini di backend dari pola jawaban kelas. */
+export async function fetchClassInsight(classId: string): Promise<ClassInsight> {
+  const { data: { session } } = await createClient().auth.getSession();
+  if (!session) throw new QuestApiError('Sesi berakhir. Masuk lagi.', 401);
+  const res = await fetch(`${apiBase()}/progress/class/${encodeURIComponent(classId)}/insight`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (!res.ok) throw new QuestApiError('Bahan refleksi belum bisa dibuat. Coba lagi.', res.status);
+  return (await res.json()) as ClassInsight;
+}

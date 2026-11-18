@@ -8,6 +8,10 @@ import type {
   DashboardQuery,
   LearningDecision,
   RiskTrend,
+  StudentConclusion,
+  StudentReflection,
+  StudentReport,
+  StudentStory,
   Student,
   TeacherDashboardRepository,
   TopicChoice,
@@ -342,6 +346,74 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
       reachedGoalCount: students.filter((student) => student.reachedGoal === true).length,
       missedGoalCount: students.filter((student) => student.reachedGoal === false).length,
       students: students.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name)),
+    };
+  }
+
+  // Detail satu siswa: tiap cerita yang dikerjakan (pilihan per langkah dari story_journeys),
+  // refleksi (story_reflections) beserta tanggapan Moni, dan kesimpulan (story_conclusions).
+  // Hanya 8 chapter resmi; data Perisai Judi tidak pernah dibaca di sini.
+  async getStudentReport(classId: string, studentId: string): Promise<StudentReport> {
+    const supabase = createClient();
+    const uid = Number(studentId);
+    const [{ data: user }, { data: topics }, { data: modules }] = await Promise.all([
+      supabase.from('users').select('id, name').eq('id', uid).eq('class_id', classId).eq('role', 'student').maybeSingle(),
+      supabase.from('module_topics').select('id, title').not('chapter', 'is', null).order('chapter'),
+      supabase.from('modules').select('id, title, topic_id'),
+    ]);
+    const topicTitle = new Map((topics ?? []).map((topic) => [topic.id, topic.title as string]));
+    const moduleRows = (modules ?? []).filter((module) => topicTitle.has(module.topic_id));
+    const moduleIds = moduleRows.map((module) => module.id);
+
+    type Entry = { question: string; answer: string; verdict: TopicChoice['verdict']; consequence: string; cashAfter: number };
+    type Journey = { module_id: number; state: { cash?: number; goal?: number; history?: Entry[] } | null };
+    const none = { data: [] as never[] };
+    const [{ data: progressRows }, { data: journeyRows }, { data: reflectionRows }, { data: conclusionRows }] = moduleIds.length
+      ? await Promise.all([
+          supabase.from('user_module_progress').select('module_id, progress, score').eq('user_id', uid).in('module_id', moduleIds),
+          supabase.from('story_journeys').select('module_id, state').eq('user_id', uid).in('module_id', moduleIds),
+          supabase.from('story_reflections').select('module_id, kind, impact_label, why, do_differently, ai_feedback, ai_insight, created_at').eq('user_id', uid).in('module_id', moduleIds).order('created_at'),
+          supabase.from('story_conclusions').select('module_id, attempt, text, level, ai_feedback, ai_reinforcement, created_at').eq('user_id', uid).in('module_id', moduleIds).order('attempt'),
+        ])
+      : [none, none, none, none];
+
+    const progress = (progressRows ?? []) as Array<{ module_id: number; progress: number | null; score: number | null }>;
+    const journeys = (journeyRows ?? []) as Journey[];
+    const reflections = (reflectionRows ?? []) as Array<{ module_id: number; kind: 'story' | 'refresh'; impact_label: string | null; why: string | null; do_differently: string | null; ai_feedback: string | null; ai_insight: string | null; created_at: string }>;
+    const conclusions = (conclusionRows ?? []) as Array<{ module_id: number; attempt: number; text: string; level: StudentConclusion['level']; ai_feedback: string | null; ai_reinforcement: string | null; created_at: string }>;
+    const when = (iso: string) => format(new Date(iso), 'd MMM, HH.mm', { locale: idLocale });
+
+    const stories: StudentStory[] = [];
+    for (const mod of moduleRows) {
+      const prog = progress.find((item) => item.module_id === mod.id);
+      const state = journeys.find((item) => item.module_id === mod.id)?.state ?? null;
+      const myReflections = reflections.filter((item) => item.module_id === mod.id);
+      const myConclusions = conclusions.filter((item) => item.module_id === mod.id);
+      const history = state?.history ?? [];
+      if (!prog && !history.length && !myReflections.length && !myConclusions.length) continue;
+      const finished = (prog?.progress ?? 0) >= 1;
+      stories.push({
+        moduleId: String(mod.id),
+        title: mod.title,
+        chapter: topicTitle.get(mod.topic_id) ?? '',
+        status: finished ? 'Selesai' : 'Berjalan',
+        score: prog?.score ?? null,
+        finalCash: finished && typeof state?.cash === 'number' ? state.cash : null,
+        goal: typeof state?.goal === 'number' ? state.goal : null,
+        choices: history.map((entry) => ({ question: entry.question, answer: entry.answer, verdict: entry.verdict, consequence: entry.consequence, cashAfter: entry.cashAfter })),
+        reflections: myReflections.map((item): StudentReflection => ({ kind: item.kind, mostImpactful: item.impact_label, why: item.why, doDifferently: item.do_differently, aiFeedback: item.ai_feedback, aiInsight: item.ai_insight, time: when(item.created_at) })),
+        conclusions: myConclusions.map((item): StudentConclusion => ({ attempt: item.attempt, text: item.text, level: item.level, aiFeedback: item.ai_feedback, aiReinforcement: item.ai_reinforcement, time: when(item.created_at) })),
+      });
+    }
+    const scored = stories.map((story) => story.score).filter((value): value is number => value !== null);
+    const name = user?.name ?? 'Siswa';
+    return {
+      id: studentId,
+      name,
+      initials: name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase(),
+      score: scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : null,
+      completedTopics: stories.filter((story) => story.status === 'Selesai').length,
+      totalTopics: moduleRows.length,
+      stories,
     };
   }
 
