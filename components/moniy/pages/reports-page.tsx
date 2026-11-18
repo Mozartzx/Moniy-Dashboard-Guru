@@ -16,7 +16,7 @@ export function ReportsPage({ snapshot, className, periodLabel }: { snapshot: Cl
     { checked: includeLearning, setChecked: setIncludeLearning, title: 'Progres belajar', text: 'Status topik, nilai siswa, dan pola benar-salah.' },
     { checked: includeDecisions, setChecked: setIncludeDecisions, title: 'Rekam keputusan siswa', text: 'Riwayat belajar individual untuk tindak lanjut pedagogis.' },
     { checked: includeRisk, setChecked: setIncludeRisk, title: 'Kerentanan judi tingkat kelas', text: 'Hanya angka agregat anonim dan rekomendasi pembinaan.' },
-    { checked: includeCommunity, setChecked: setIncludeCommunity, title: 'Komunitas kelas', text: 'Hasil Simulasi Bisnis dan status tinjauan.' },
+    { checked: includeCommunity, setChecked: setIncludeCommunity, title: 'Komunitas kelas', text: 'Hasil Simulasi Keuangan dan status tinjauan.' },
   ];
 
   const exportReport = () => {

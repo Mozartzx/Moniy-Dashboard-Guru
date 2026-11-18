@@ -29,7 +29,7 @@ export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnaps
   return (
     <div className="page-stack">
       <section className="page-intro">
-        <div><span className="page-kicker">Monitoring komunitas</span><h1>Komunitas kelas</h1><p>Tinjau hasil Simulasi Bisnis untuk bahan umpan balik dan presentasi.</p></div>
+        <div><span className="page-kicker">Monitoring komunitas</span><h1>Komunitas kelas</h1><p>Tinjau hasil Simulasi Keuangan untuk bahan umpan balik dan presentasi.</p></div>
         <fieldset className="segmented-control" aria-label="Filter status tinjauan" style={{ '--segment-index': filters.findIndex((item) => item.value === filter) } as CSSProperties}>
           <span className="segmented-indicator" aria-hidden="true" />
           {filters.map((item) => <button type="button" key={item.value} className={filter === item.value ? 'active' : ''} aria-pressed={filter === item.value} onClick={() => setFilter(item.value)}>{item.label}</button>)}
@@ -49,7 +49,7 @@ export function CommunityPage({ snapshot, onReview }: { snapshot: ClassroomSnaps
         {selected ? (
           <DialogContent className="detail-modal community-dialog-content" showCloseButton={false}>
             <button className="modal-close" type="button" onClick={() => setSelected(null)} aria-label="Tutup detail"><X size={20} /></button>
-            <span className="page-kicker">Hasil Simulasi Bisnis</span>
+            <span className="page-kicker">Hasil Simulasi Keuangan</span>
             <DialogTitle id="community-detail-title">{selected.title}</DialogTitle>
             <DialogDescription className="modal-lead">{selected.studentName} | {selected.businessType}</DialogDescription>
             <div className="modal-result"><CheckCircle2 size={23} /><div><strong>{selected.epilogue}</strong><p>{selected.summary}</p></div></div>

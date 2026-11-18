@@ -735,3 +735,13 @@ a.sidebar-class-card:focus-visible { outline: 3px solid var(--blue-strong); outl
 .reflection-material h3 { margin: 0 0 8px; color: var(--navy); font-size: var(--text-base); }
 .reflection-material p { margin: 0 0 10px; color: #405468; font-size: var(--text-sm); line-height: 1.55; white-space: pre-line; }
 .reflection-material p:last-child { margin-bottom: 0; }
+.guide-modal { max-width: 640px; max-height: 86vh; overflow-y: auto; }
+.guide-body { display: grid; gap: 10px; margin-top: 14px; }
+.guide-body h3 { margin: 10px 0 0; color: var(--navy); font-size: var(--text-base); }
+.guide-body p { margin: 0; color: #405468; font-size: var(--text-sm); line-height: 1.55; }
+.guide-steps { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.guide-steps li { display: flex; gap: 10px; padding: 10px; border: 1px solid #e3edf6; border-radius: 12px; background: #fff; }
+.guide-steps li > span { width: 27px; height: 27px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; color: #fff; background: var(--blue); font-size: var(--text-sm); font-weight: 700; }
+.guide-steps strong { display: block; margin-bottom: 2px; color: var(--navy); }
+.guide-list { margin: 0; padding-left: 20px; color: #405468; font-size: var(--text-sm); line-height: 1.6; }
+.guide-actions { display: flex; justify-content: flex-end; margin-top: 16px; }

@@ -248,7 +248,7 @@ class SupabaseTeacherDashboardRepository implements TeacherDashboardRepository {
         studentName,
         initials: studentName.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase(),
         title: post.content.length > 48 ? `${post.content.slice(0, 48)}...` : post.content,
-        businessType: 'Simulasi Bisnis',
+        businessType: 'Simulasi Keuangan',
         epilogue: '',
         summary: post.content,
         submittedAt: format(new Date(post.created_at), "d MMM, HH.mm", { locale: idLocale }),

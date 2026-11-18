@@ -14,7 +14,7 @@ import './landing-next.css';
 
 export const metadata: Metadata = {
   title: 'Moniy | Belajar keuangan lewat cerita seru',
-  description: 'Moniy mengajak siswa SMA belajar keuangan lewat cerita interaktif, simulasi bisnis, dan proteksi judi online. Guru memantau kelas lewat dashboard.',
+  description: 'Moniy mengajak siswa SMA belajar keuangan lewat cerita interaktif, simulasi keuangan, dan proteksi judi online. Guru memantau kelas lewat dashboard.',
 };
 
 export default function Home() {

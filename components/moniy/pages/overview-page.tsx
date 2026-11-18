@@ -57,7 +57,7 @@ export function OverviewPage({ snapshot, teacherName }: { snapshot: ClassroomSna
         </article>
 
         <article className="surface-card compact-card">
-          <div className="section-heading-row"><div><h2>Perlu ditinjau</h2><p>Hasil Simulasi Bisnis terbaru.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/komunitas-kelas">Lihat semua</BrowserNavigationLink></div>
+          <div className="section-heading-row"><div><h2>Perlu ditinjau</h2><p>Hasil Simulasi Keuangan terbaru.</p></div><BrowserNavigationLink className="text-action" href="/dashboard/komunitas-kelas">Lihat semua</BrowserNavigationLink></div>
           {pendingPosts.length ? pendingPosts.map((post) => <BrowserNavigationLink className="community-mini-row" href="/dashboard/komunitas-kelas" key={post.id}><span className="student-avatar">{post.initials}</span><span><strong>{post.title}</strong><small>{post.studentName}, {post.submittedAt}</small></span><ChevronRight size={17} /></BrowserNavigationLink>) : <EmptyState title="Semua sudah ditinjau" description="Tidak ada postingan yang menunggu." />}
         </article>
       </section>
