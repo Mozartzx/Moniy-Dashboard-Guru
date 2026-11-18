@@ -187,7 +187,8 @@ export function QuestChat({ topics, classOptions, notify, resumeId, onActiveChan
     };
     try { await go(onEvent); } catch (err) { patch((t) => ({ ...t, error: errText(err) })); ended = true; }
     if (!ended) patch((t) => ({ ...t, error: 'Koneksi terputus sebelum selesai. Coba lagi.' }));
-    patch((t) => ({ ...t, running: false }));
+    // Langkah yang masih berputar saat giliran berakhir ditutup: gagal bila giliran berakhir dengan error, selesai bila tidak.
+    patch((t) => ({ ...t, running: false, steps: t.steps.map((x) => (x.status === 'running' ? { ...x, status: t.error ? 'failed' : 'done' } : x)) }));
     setBusy(false);
     return { id, wantsApprove, outline };
   };
